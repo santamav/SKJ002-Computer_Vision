@@ -36,7 +36,7 @@ def testBrightenImg(im):
 
 path_input = './imgs-P1/'
 path_output = './imgs-out-P1/'
-bAllFiles = True
+bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*") #Changed from ~~files = glob.blob(path_input + "*.pgm")~~ so it reads all the files
 else:
@@ -61,6 +61,16 @@ def saveImage(imfile, im2, test): #Exercise 2 - Lab1
     pil_im = Image.fromarray(im2.astype(np.uint8))  # from array to Image
     pil_im.save(path_output+'//'+fname + suffixFiles[test] + fext)
 
+def doRebrightenTest():
+    for imfile in files:
+        im = np.array(Image.open(imfile))
+        darkIm = testDarkenImg(im)[0]
+        brightIm = testBrightenImg(darkIm)[0]
+        print(darkIm.shape)
+        print(brightIm.shape)
+        saveImage(imfile, darkIm, 'testDarkenImg')
+        saveImage(imfile, brightIm, 'testBrightenImg')
+
 bSaveResultImgs = True
 def doTests():
     print("Testing on", files)
@@ -77,4 +87,5 @@ def doTests():
 
 if __name__== "__main__":
     doTests()
+    #doRebrightenTest()
 
