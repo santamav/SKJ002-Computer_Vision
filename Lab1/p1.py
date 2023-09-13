@@ -22,8 +22,7 @@ def darkenImg(im,p=2):
     return (im ** float(p)) / (255 ** (p - 1)) # try without the float conversion and see what happens
 
 def brightenImg(im,p=2):
-    result =  np.power(255.0 ** (p - 1) * im, 1. / p)  # notice this NumPy function is different to the scalar math.pnp
-    return result
+    return np.power(255.0 ** (p - 1) * im, 1. / p)  # notice this NumPy function is different to the scalar math.pnp
 
 def testDarkenImg(im):
     im2 = darkenImg(im,p=2) #  Is "p=2" different here than in the function definition? Can we remove "p=" here?
@@ -69,7 +68,7 @@ def doTests():
         im = np.array(Image.open(imfile))#.convert('L'))  # from Image to array #'RGB' to have all 3 color chanels 'L' for Greyscale
         for test in tests:
             out = eval(test)(im)
-            im2 = out[0] 
+            im2 = out[0].astype(int) #changing the values to int for the visualization
             vpu.showImgsPlusHists(im, im2, title=nameTests[test])
             if len(out) > 1:
                 vpu.showPlusInfo(out[1],"cumulative histogram" if test=="testHistEq" else None)

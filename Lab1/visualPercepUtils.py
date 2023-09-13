@@ -40,7 +40,7 @@ def showInGrid(imgs, m=None, n=None, title="",subtitles=None):
     #print(m,n)
     fig = plt.figure(figsize=(m, n))
     plt.gray()
-    for i in range(1, N + 1):
+    for i in range(1, N + 1): 
         ax=fig.add_subplot(m, n, i)
         if len(imgs[i - 1].shape) >= 2:
             plt.imshow(imgs[i - 1])
