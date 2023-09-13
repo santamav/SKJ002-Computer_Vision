@@ -22,8 +22,8 @@ def darkenImg(im,p=2):
     return (im ** float(p)) / (255 ** (p - 1)) # try without the float conversion and see what happens
 
 def brightenImg(im,p=2):
-    return np.power(255.0 ** (p - 1) * im, 1. / p)  # notice this NumPy function is different to the scalar math.pow(a,b)
-
+    result =  np.power(255.0 ** (p - 1) * im, 1. / p)  # notice this NumPy function is different to the scalar math.pnp
+    return result
 
 def testDarkenImg(im):
     im2 = darkenImg(im,p=2) #  Is "p=2" different here than in the function definition? Can we remove "p=" here?
@@ -39,15 +39,15 @@ path_input = './imgs-P1/'
 path_output = './imgs-out-P1/'
 bAllFiles = True
 if bAllFiles:
-    files = glob.glob(path_input + "*.pgm")
+    files = glob.glob(path_input + "*") #Changed from ~~files = glob.blob(path_input + "*.pgm")~~ so it reads all the files
 else:
-    files = [path_input + 'iglesia.pgm'] # iglesia,huesos
+    files = [path_input + 'girl.ppm'] # iglesia,huesos, path_input + 'iglesia.pgm'
 
 bAllTests = True
 if bAllTests:
     tests = ['testHistEq', 'testBrightenImg', 'testDarkenImg']
 else:
-    tests = ['testHistEq']#['testBrightenImg']
+    tests = ['testDarkenImg']#['testHistEq']#['testBrightenImg']
 nameTests = {'testHistEq': "Histogram equalization",
              'testBrightenImg': 'Brighten image',
              'testDarkenImg': 'Darken image'}
@@ -55,27 +55,26 @@ suffixFiles = {'testHistEq': '_heq',
                'testBrightenImg': '_br',
                'testDarkenImg': '_dk'}
 
-bSaveResultImgs = True
-def saveImage(im, name, path):
-    print("Saving image")
-    
+def saveImage(imfile, im2, test): #Exercise 2 - Lab1
+    dirname,basename = os.path.dirname(imfile), os.path.basename(imfile)
+    fname, fext = os.path.splitext(basename)
+    #print(dname,basename)
+    pil_im = Image.fromarray(im2.astype(np.uint8))  # from array to Image
+    pil_im.save(path_output+'//'+fname + suffixFiles[test] + fext)
 
+bSaveResultImgs = True
 def doTests():
     print("Testing on", files)
     for imfile in files:
-        im = np.array(Image.open(imfile).convert('L'))  # from Image to array
+        im = np.array(Image.open(imfile))#.convert('L'))  # from Image to array #'RGB' to have all 3 color chanels 'L' for Greyscale
         for test in tests:
             out = eval(test)(im)
-            im2 = out[0]
+            im2 = out[0] 
             vpu.showImgsPlusHists(im, im2, title=nameTests[test])
             if len(out) > 1:
                 vpu.showPlusInfo(out[1],"cumulative histogram" if test=="testHistEq" else None)
             if bSaveResultImgs:
-                dirname,basename = os.path.dirname(imfile), os.path.basename(imfile)
-                fname, fext = os.path.splitext(basename)
-                #print(dname,basename)
-                pil_im = Image.fromarray(im2.astype(np.uint8))  # from array to Image
-                pil_im.save(path_output+'//'+fname + suffixFiles[test] + fext)
+                saveImage(imfile, im2, test)
 
 if __name__== "__main__":
     doTests()
