@@ -40,7 +40,7 @@ bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*") #Changed from ~~files = glob.blob(path_input + "*.pgm")~~ so it reads all the files
 else:
-    files = [path_input + 'girl.ppm'] # iglesia,huesos, path_input + 'iglesia.pgm'
+    files = [path_input + 'iglesia.pgm'] # iglesia,huesos, path_input + 'iglesia.pgm'
 
 bAllTests = True
 if bAllTests:
@@ -66,10 +66,29 @@ def doRebrightenTest():
         im = np.array(Image.open(imfile))
         darkIm = testDarkenImg(im)[0]
         brightIm = testBrightenImg(darkIm)[0]
-        print(darkIm.shape)
-        print(brightIm.shape)
         saveImage(imfile, darkIm, 'testDarkenImg')
         saveImage(imfile, brightIm, 'testBrightenImg')
+
+def invertImg(im):
+    return 255 - im
+
+def checkboardIm(im, n, m):
+    spacing_x = np.linspace(0, im.shape[0], n+1).astype(int)
+    spacing_y = np.linspace(0, im.shape[1], m+1).astype(int)
+    for num_x in range(len(spacing_x)-1):
+        for num_y in range(len(spacing_y)-1):
+            if (num_x+num_y)%2!=0:
+                im[spacing_x[num_x]:spacing_x[num_x+1],spacing_y[num_y]:spacing_y[num_y+1]]=invertImg(im[spacing_x[num_x]:spacing_x[num_x+1],spacing_y[num_y]:spacing_y[num_y+1]])
+        
+    return im
+
+def doCheckboardTest():
+    print("Testing on", files)
+    for imfile in files:
+        im = np.array(Image.open(imfile).convert('L')) #Black and white
+        result_im = checkboardIm(im, 5, 3)
+        vpu.showImgsPlusHists(im, result_im, title='NegativeCheckboard')
+
 
 bSaveResultImgs = True
 def doTests():
@@ -86,6 +105,6 @@ def doTests():
                 saveImage(imfile, im2, test)
 
 if __name__== "__main__":
-    doTests()
-    #doRebrightenTest()
+    #doTests()
+    doCheckboardTest()
 
