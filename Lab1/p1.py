@@ -107,20 +107,41 @@ def doCheckboardTest():
         vpu.showImgsPlusHists(im, result_im, title='Checkboard')
         #TODO: Make the visualization and save the image
 
-def multiHist(im, n, nbins=256):
+
+"""
+Recursively calculate the histogram for n subdivions
+
+TODO: How can I calculate the index in the array for each layer?
+    - Does the current level need to know its own index?
+"""
+def recursiveMultihist(im, depth, max_depth, result, nbins=256):
     #Calculate current level histogram
     imhist, bins = np.histogram(im.flatten(), list(range(nbins)), density=False)
+    #Add the current imhist to the result
+    result.append(imhist)
     #Break condition, either n = 0 or the image cannot be made smaller
+    if(depth >= max_depth): return
     #Calculate the subdivision ranges
+    n_cuadrants = 4
+    height, width = im.shape[:2]
+    row_ranges = np.linspace(0, height, n_cuadrants+1).astype(int) #each image is subdivided in 4 cuadrants
+    col_ranges = np.linspace(0, width, n_cuadrants+1).astype(int)
     #Calculate subdivision histograms recursively
-    #Return current histogram + branches
+    for i in range(n_cuadrants): #each iteration subdivides in 4
+        img_chunk = im[row_ranges[i]:row_ranges[i+1], col_ranges[i]:col_ranges[i+1]]
+        recursiveMultihist(img_chunk, depth+1, max_depth, result)
     
+def multihist(im, n):
+    result = []
+    recursiveMultihist(im, 1, n, result)
+    vpu.showInGrid(result)
+    return result
 
 def doMultiHistTest():
     print("Testing on", files)
     for imfile in files:
         im = np.array(Image.open(imfile).convert('L')) #Black and white
-        result_im = multiHist(im, 3)
+        result = multihist(im, 3)
         #TODO: Make the visualization and save the image
 
     
@@ -141,5 +162,6 @@ def doTests():
 
 if __name__== "__main__":
     #doTests()
-    doCheckboardTest()
+    #doCheckboardTest()
+    doMultiHistTest()
 
