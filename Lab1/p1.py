@@ -95,10 +95,9 @@ def checkboardIm(im, n, m):
     # Create masks for the odd-indexed cells
     mask = (row_indices[:, np.newaxis] + col_indices) % 2 == 1
     # Use broadcasting to invert pixels in odd-indexed cells
-    result = np.copy(im)
-    result[mask] = invertImg(result[mask])
-    
-    return result
+    im_result = np.copy(im)
+    im_result[mask] = invertImg(im_result[mask])
+    return im_result
 
 def doCheckboardTest():
     print("Testing on", files)
@@ -106,7 +105,25 @@ def doCheckboardTest():
         im = np.array(Image.open(imfile).convert('L')) #Black and white
         result_im = checkboardIm(im, 5, 3)
         vpu.showImgsPlusHists(im, result_im, title='Checkboard')
+        #TODO: Make the visualization and save the image
 
+def multiHist(im, n, nbins=256):
+    #Calculate current level histogram
+    imhist, bins = np.histogram(im.flatten(), list(range(nbins)), density=False)
+    #Break condition, either n = 0 or the image cannot be made smaller
+    #Calculate the subdivision ranges
+    #Calculate subdivision histograms recursively
+    #Return current histogram + branches
+    
+
+def doMultiHistTest():
+    print("Testing on", files)
+    for imfile in files:
+        im = np.array(Image.open(imfile).convert('L')) #Black and white
+        result_im = multiHist(im, 3)
+        #TODO: Make the visualization and save the image
+
+    
 
 bSaveResultImgs = True
 def doTests():
