@@ -72,22 +72,40 @@ def doRebrightenTest():
 def invertImg(im):
     return 255 - im
 
-def checkboardIm(im, n, m):
-    spacing_x = np.linspace(0, im.shape[0], n+1).astype(int)
-    spacing_y = np.linspace(0, im.shape[1], m+1).astype(int)
-    for num_x in range(len(spacing_x)-1):
-        for num_y in range(len(spacing_y)-1):
-            if (num_x+num_y)%2!=0:
-                im[spacing_x[num_x]:spacing_x[num_x+1],spacing_y[num_y]:spacing_y[num_y+1]]=invertImg(im[spacing_x[num_x]:spacing_x[num_x+1],spacing_y[num_y]:spacing_y[num_y+1]])
+def old_checkboardIm(im, n, m):
+    im_result = im.copy()
+    spacing_y = np.linspace(0, im.shape[0], n+1).astype(int)
+    spacing_x = np.linspace(0, im.shape[1], m+1).astype(int)
+    for num_y in range(len(spacing_y)-1):
+        for num_x in range(len(spacing_x)-1):
+            if (num_y+num_x)%2!=0:
+                im_result[spacing_y[num_y]:spacing_y[num_y+1],spacing_x[num_x]:spacing_x[num_x+1]]=invertImg(im[spacing_y[num_y]:spacing_y[num_y+1],spacing_x[num_x]:spacing_x[num_x+1]])
         
-    return im
+    return im_result
+
+def checkboardIm(im, n, m):
+    height, width = im.shape[:2]
+    cell_height = height // n
+    cell_width = width // m
+
+    # Create row and column indices for the cells
+    row_indices = np.arange(height) // cell_height
+    col_indices = np.arange(width) // cell_width
+    # We can also reshape the two index arrays and sum them toguether row_indices = row.reshape(1,-1) + col.reshape(-1,1)
+    # Create masks for the odd-indexed cells
+    mask = (row_indices[:, np.newaxis] + col_indices) % 2 == 1
+    # Use broadcasting to invert pixels in odd-indexed cells
+    result = np.copy(im)
+    result[mask] = invertImg(result[mask])
+    
+    return result
 
 def doCheckboardTest():
     print("Testing on", files)
     for imfile in files:
         im = np.array(Image.open(imfile).convert('L')) #Black and white
         result_im = checkboardIm(im, 5, 3)
-        vpu.showImgsPlusHists(im, result_im, title='NegativeCheckboard')
+        vpu.showImgsPlusHists(im, result_im, title='Checkboard')
 
 
 bSaveResultImgs = True
