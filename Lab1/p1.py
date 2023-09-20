@@ -110,17 +110,14 @@ def doCheckboardTest():
 
 """
 Recursively calculate the histogram for n subdivions
-
-TODO: How can I calculate the index in the array for each layer?
-    - Does the current level need to know its own index?
 """
-def recursiveMultihist(im, depth, max_depth, result, nbins=256):
+def recursiveMultihist(im, n, result, nbins=256):
     #Calculate current level histogram
     imhist, bins = np.histogram(im.flatten(), list(range(nbins)), density=False)
     #Add the current imhist to the result
     result.append(imhist)
     #Break condition, either n = 0 or the image cannot be made smaller
-    if(depth >= max_depth): return
+    if(n <= 1): return
     #Calculate the subdivision ranges
     n_cuadrants = 4
     height, width = im.shape[:2]
@@ -129,7 +126,7 @@ def recursiveMultihist(im, depth, max_depth, result, nbins=256):
     #Calculate subdivision histograms recursively
     for i in range(n_cuadrants): #each iteration subdivides in 4
         img_chunk = im[row_ranges[i]:row_ranges[i+1], col_ranges[i]:col_ranges[i+1]]
-        recursiveMultihist(img_chunk, depth+1, max_depth, result)
+        recursiveMultihist(img_chunk, n-1, result)
     
 def multihist(im, n):
     result = []

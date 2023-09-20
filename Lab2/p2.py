@@ -78,6 +78,26 @@ def averageFilter(im, filterSize):
     mask = np.divide(mask, np.sum(mask)) # can you think of any alternative for np.sum(mask)?
     return filters.convolve(im, mask)
 
+#--------------------------
+# Separable by axis Average (mean) filter
+#--------------------------
+def separableAverageFilter(im, filterSize):
+    result = im.copy()
+    mask = np.ones(filterSize)
+    mask = np.divide(mask, np.sum(mask))
+    #Filter the image in the two axis
+    result = filters.convolve(result, mask.reshape(-1,1))
+    result = filters.convolve(result, mask.reshape(1,-1))
+    return result
+
+def testSeparableAverageFilter(im_clean, params):
+    imgs = []
+    for sp_pctg in params['sp_pctg']:
+        im_dirty = addSPNoise(im_clean, sp_pctg) # salt and pepper noise
+        for filterSize in params['filterSizes']:
+            imgs.append(np.array(im_dirty))
+            imgs.append(separableAverageFilter(im_dirty, filterSize))
+    return imgs
 
 def testAverageFilter(im_clean, params):
     imgs = []
@@ -146,12 +166,12 @@ else:
 # --------------------
 
 testsNoises = ['testSandPNoise', 'testGaussianNoise']
-testsFilters = ['testAverageFilter', 'testGaussianFilter', 'testMedianFilter']
-bAllTests = True
+testsFilters = ['testAverageFilter', 'testSeparableAverageFilter', 'testGaussianFilter', 'testMedianFilter']
+bAllTests = False
 if bAllTests:
     tests = testsNoises + testsFilters
 else:
-    tests = ['testSandPNoise']
+    tests = ['testAverageFilter', 'testSeparableAverageFilter']
 
 # -------------------------------------------------------------------
 # Dictionary of user-friendly names for each function ("test") name
@@ -161,7 +181,8 @@ nameTests = {'testGaussianNoise': 'Gaussian noise',
              'testSandPNoise': 'Salt & Pepper noise',
              'testAverageFilter': 'Mean filter',
              'testGaussianFilter': 'Gaussian filter',
-             'testMedianFilter': 'Median filter'}
+             'testMedianFilter': 'Median filter',
+             'testSeparableAverageFilter':'Separable Average'}
 
 bSaveResultImgs = False
 
@@ -193,7 +214,6 @@ def doTests():
         im = np.array(im_pil)  # from Image to array
 
         for test in tests:
-
             if test == "testGaussianNoise":
                 params = gauss_sigmas_noise
                 subTitle = r", $\sigma$: " + str(params)
@@ -202,6 +222,10 @@ def doTests():
                 subTitle = ", %: " + str(params)
             elif test == "testAverageFilter":
                 params = {}
+                params['filterSizes'] = avgFilter_sizes
+                params['sp_pctg'] = percentagesSandP
+                subTitle = ", " + str(params)
+            elif test == "testSeparableAverageFilter":
                 params['filterSizes'] = avgFilter_sizes
                 params['sp_pctg'] = percentagesSandP
                 subTitle = ", " + str(params)
