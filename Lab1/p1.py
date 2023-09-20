@@ -44,15 +44,16 @@ else:
 
 bAllTests = True
 if bAllTests:
-    tests = ['testHistEq', 'testBrightenImg', 'testDarkenImg']
+    tests = ['testHistEq', 'testBrightenImg', 'testDarkenImg', 'testCheckboard']
 else:
     tests = ['testDarkenImg']#['testHistEq']#['testBrightenImg']
 nameTests = {'testHistEq': "Histogram equalization",
              'testBrightenImg': 'Brighten image',
-             'testDarkenImg': 'Darken image'}
+             'testDarkenImg': 'Darken image', 'testCheckboard':'Checkboard'}
 suffixFiles = {'testHistEq': '_heq',
                'testBrightenImg': '_br',
-               'testDarkenImg': '_dk'}
+               'testDarkenImg': '_dk',
+               'testCheckboard':'_cb'}
 
 def saveImage(imfile, im2, test): #Exercise 2 - Lab1
     dirname,basename = os.path.dirname(imfile), os.path.basename(imfile)
@@ -85,9 +86,9 @@ def old_checkboardIm(im, n, m):
 
 def checkboardIm(im, n, m):
     height, width = im.shape[:2]
-    cell_height = height // n
-    cell_width = width // m
-
+    cell_height = np.ceil(height / n).astype(int) # height//n
+    cell_width = np.ceil(width / m).astype(int) # width//m
+    #TODO: Had an error with the las row and column when the division was an odd number
     # Create row and column indices for the cells
     row_indices = np.arange(height) // cell_height
     col_indices = np.arange(width) // cell_width
@@ -105,7 +106,7 @@ def doCheckboardTest():
         im = np.array(Image.open(imfile).convert('L')) #Black and white
         result_im = checkboardIm(im, 5, 3)
         vpu.showImgsPlusHists(im, result_im, title='Checkboard')
-        #TODO: Make the visualization and save the image
+        saveImage(imfile, result_im, 'testCheckboard')
 
 
 """
@@ -130,7 +131,7 @@ def recursiveMultihist(im, n, result, nbins=256):
     
 def multihist(im, n):
     result = []
-    recursiveMultihist(im, 1, n, result)
+    recursiveMultihist(im, n, result)
     vpu.showInGrid(result)
     return result
 
@@ -159,6 +160,6 @@ def doTests():
 
 if __name__== "__main__":
     #doTests()
-    #doCheckboardTest()
-    doMultiHistTest()
+    doCheckboardTest()
+    #doMultiHistTest()
 
