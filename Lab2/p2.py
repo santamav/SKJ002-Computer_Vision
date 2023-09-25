@@ -173,6 +173,21 @@ def testMedianFilter(im_clean, params):
     return imgs
 
 
+# --------------------------
+# Quotient Image
+# --------------------------
+def quotientImage(im, sigma):
+    blurred_im = addGaussianNoise(im, sigma)
+    result = im.copy()
+    result = result/blurred_im
+    return result
+
+def testQuotientImage(im, params):
+    imgs = []
+    for sigma in params['sd_gass_noise']:
+        imgs.extend((np.array(im), quotientImage(sigma)))
+    return imgs
+
 # -----------------
 # Test image files
 # -----------------
@@ -195,7 +210,7 @@ bAllTests = False
 if bAllTests:
     tests = testsNoises + testsFilters
 else:
-    tests = ['testGaussianFilter']#['testAverageFilter', 'testSeparableAverageFilter']
+    tests = ['testQuotientImage']#['testAverageFilter', 'testSeparableAverageFilter']
 
 # -------------------------------------------------------------------
 # Dictionary of user-friendly names for each function ("test") name
@@ -206,7 +221,8 @@ nameTests = {'testGaussianNoise': 'Gaussian noise',
              'testAverageFilter': 'Mean filter',
              'testGaussianFilter': 'Gaussian filter',
              'testMedianFilter': 'Median filter',
-             'testSeparableAverageFilter':'Separable Average'}
+             'testSeparableAverageFilter':'Separable Average',
+             'testQuotientImage':'Quotient Image'}
 
 bSaveResultImgs = False
 
@@ -263,6 +279,10 @@ def doTests():
                 params['sd_gauss_noise'] = gauss_sigmas_noise
                 params['sd_gauss_filter'] = gauss_sigmas_filter
                 subTitle = r", $\sigma_n$ (noise): " + str(gauss_sigmas_noise) + ", $\sigma_f$ (filter): " + str(gauss_sigmas_filter)
+            elif test == 'testQuotientImage':
+                params = {}
+                params['sd_gauss_noise'] = gauss_sigmas_noise
+                subTitle = f", quotient image"
             if test in testsUsingPIL:
                 outs_pil = eval(test)(im_pil, params)
                 outs_np = vpu.pil2np(outs_pil)
