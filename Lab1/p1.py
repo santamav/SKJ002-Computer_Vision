@@ -105,7 +105,7 @@ def doCheckboardTest():
     for imfile in files:
         im = np.array(Image.open(imfile).convert('L')) #Black and white
         result_im = checkboardIm(im, 5, 3)
-        vpu.showImgsPlusHists(im, result_im, title='Checkboard')
+        vpu.showInGrid([im, result_im])
         saveImage(imfile, result_im, 'testCheckboard')
 
 
@@ -142,7 +142,50 @@ def doMultiHistTest():
         result = multihist(im, 3)
         #TODO: Make the visualization and save the image
 
+# ****************************************************************
+# Gray level transformation fucntion T(l) = a*(e**(-alpha*(l**2)))
+# n = subdivisions
+# l0 = min value
+# l1 = max value
+# ****************************************************************
+def expTransf(alpha, n, l0, l1, bInc=True):
+    # Generate an array of equally spaced input values
+    l_values = np.linspace(l0, l1, n)
     
+    # Calculate the exponential transformation
+    a = 255 if bInc else -255  # Determine 'a' based on bInc
+    b = 0 if bInc else 255    # Determine 'b' based on bInc
+    
+    # Apply the transformation function
+    transformed_values = a * np.exp(-alpha * l_values**2) + b
+    return transformed_values
+
+def transfImage(im, f):
+    # Normalize the image pixel values to the [0, 255] range
+    im_normalized = ((im - im.min()) / (im.max() - im.min())) * 255
+    
+    # Apply the transformation function 'f' to the normalized image
+    transformed_im = f[im_normalized.astype(int)]
+    
+    # Clip values to ensure they are within the [0, 255] range
+    transformed_im = np.clip(transformed_im, 0, 255).astype(np.uint8)
+    
+    return transformed_im
+
+def doExpTransf():
+    alpha = 0.01
+    n = 256
+    l0 = 0
+    l1 = 255
+    bInc = True
+    for imfile in files:
+        im = np.array(Image.open(imfile).convert('L'))
+        #Call the transfImage function for a different amount of functions
+        transf_im = transfImage(im, expTransf(alpha, n, l0, l1, bInc))
+        vpu.showInGrid(transf_im, "Transformed Img")
+
+
+    transformed_values = expTransf(alpha, n, l0, l1, bInc)
 
 bSaveResultImgs = True
 def doTests():
@@ -160,6 +203,8 @@ def doTests():
 
 if __name__== "__main__":
     #doTests()
+    #I could have added the functions to the tests array instead of calling them here
     doCheckboardTest()
     #doMultiHistTest()
+    #doExpTransf()
 

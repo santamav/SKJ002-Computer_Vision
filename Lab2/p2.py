@@ -4,12 +4,14 @@
 from PIL import Image
 from scipy.ndimage import filters
 from scipy.signal import medfilt2d
+import scipy.signal
 import numpy as np
 import matplotlib.pyplot as plt
 import math as math
 import glob
 import os
 import sys
+import time
 
 sys.path.append("../../p1/code") # set the path for visualPercepUtils.py
 import visualPercepUtils as vpu
@@ -68,7 +70,6 @@ def testGaussianNoise(im, sigmas):
         print(len(imgs))
     return imgs
 
-
 # -------------------------
 # Average (or mean) filter
 # -------------------------
@@ -112,10 +113,28 @@ def testAverageFilter(im_clean, params):
 # -----------------
 # Gaussian filter
 # -----------------
+def gaussianFilterSep(im, sigma=5, n=16):
+    gv1d = scipy.signal.gaussian(n, sigma)
+    result = im.copy()
+    #first dimension convolution
+    result = filters.convolve(result, gv1d.reshape(-1, 1))
+    #second dimension convolution
+    result = filters.convolve(result, gv1d.T.reshape(1, -1))
+    return result
 
-def gaussianFilter(im, sigma=5):
-    # im is PIL image
+def old_gaussianFilter(im, sigma =5):
     return filters.gaussian_filter(im, sigma)
+
+def gaussianFilter(im, sigma=5, n=16):
+    # im is PIL image
+    gv1d = scipy.signal.gaussian(n, sigma)
+    #plt.imshow(gv1d.reshape(1, -1))
+    gv2d = np.outer(gv1d, gv1d)
+    #plt.imshow(gv2d)
+    result = im.copy()
+    result = filters.convolve(result, gv2d)
+
+    return result
 
 
 def testGaussianFilter(im_clean, params):
@@ -126,7 +145,12 @@ def testGaussianFilter(im_clean, params):
         im_dirty = addGaussianNoise(im_clean, sigma)
         for filterSize in params['sd_gauss_filter']:
             imgs.append(np.array(im_dirty))
+            initial_time = time.time()
             imgs.append(gaussianFilter(im_dirty, filterSize))
+            print(f'2D gasussina Filter: {time.time()-initial_time}')
+            initial_time = time.time()
+            imgs.append(gaussianFilterSep(im_dirty, filterSize))
+            print(f'Separated gaussing filter: {time.time()-initial_time}')
     return imgs
 
 
@@ -171,7 +195,7 @@ bAllTests = False
 if bAllTests:
     tests = testsNoises + testsFilters
 else:
-    tests = ['testAverageFilter', 'testSeparableAverageFilter']
+    tests = ['testGaussianFilter']#['testAverageFilter', 'testSeparableAverageFilter']
 
 # -------------------------------------------------------------------
 # Dictionary of user-friendly names for each function ("test") name
@@ -190,7 +214,7 @@ bSaveResultImgs = False
 # Parameters of noises
 # -----------------------
 percentagesSandP = [3]  # ratio (%) of image pixes affected by salt and pepper noise
-gauss_sigmas_noise = [3, 5, 10]  # standard deviation (for the [0,255] range) for Gaussian noise
+gauss_sigmas_noise = [10]#[3, 5, 10]  # standard deviation (for the [0,255] range) for Gaussian noise
 
 # -----------------------
 # Parameters of filters
