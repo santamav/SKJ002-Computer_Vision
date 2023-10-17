@@ -59,9 +59,20 @@ def testSandPNoise(im, percents):
 # Gaussian noise
 # -----------------
 
-def addGaussianNoise(im, sd=5):
-    return im + np.random.normal(loc=0, scale=sd, size=im.shape)
-
+def addGaussianNoise(im, sd):
+    if im.mode == 'L':
+        im = np.array(im)
+        result = im + np.random.normal(loc=0, scale=sd, size=im.shape)
+        Image.fromarray(result).show()
+        return result
+    
+    #if the mode is RGB, do the calculations for each band
+    im_array = np.array(im)
+    im_array[:,:,0] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array.shape[1])),0,255).astype("uint8")
+    im_array[:,:,1] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array.shape[1])),0,255).astype("uint8")
+    im_array[:,:,2] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array.shape[1])),0,255).astype("uint8")
+    return im_array
+    
 def testGaussianNoise(im, sigmas):
     imgs = []
     for sigma in sigmas:
@@ -120,10 +131,17 @@ def gaussianFilterSep(im, sigma=5, n=16):
     result = filters.convolve(result, gv1d.reshape(-1, 1))
     #second dimension convolution
     result = filters.convolve(result, gv1d.T.reshape(1, -1))
+
     return result
 
 def old_gaussianFilter(im, sigma =5):
-    return filters.gaussian_filter(im, sigma)
+    Image.fromarray(im).show()
+    result = np.copy(im)
+    result[:,:,0] = filters.gaussian_filter(im[:,:,0], sigma)
+    result[:,:,1] = filters.gaussian_filter(im[:,:,1], sigma)
+    result[:,:,2] = filters.gaussian_filter(im[:,:,2], sigma)
+    Image.fromarray(result).show()
+    return result
 
 def gaussianFilter(im, sigma=5, n=16):
     # im is PIL image
@@ -133,7 +151,6 @@ def gaussianFilter(im, sigma=5, n=16):
     #plt.imshow(gv2d)
     result = im.copy()
     result = filters.convolve(result, gv2d)
-
     return result
 
 
@@ -145,12 +162,12 @@ def testGaussianFilter(im_clean, params):
         im_dirty = addGaussianNoise(im_clean, sigma)
         for filterSize in params['sd_gauss_filter']:
             imgs.append(np.array(im_dirty))
-            initial_time = time.time()
-            imgs.append(gaussianFilter(im_dirty, filterSize))
-            print(f'2D gasussina Filter: {time.time()-initial_time}')
-            initial_time = time.time()
-            imgs.append(gaussianFilterSep(im_dirty, filterSize))
-            print(f'Separated gaussing filter: {time.time()-initial_time}')
+            #initial_time = time.time()
+            #imgs.append(gaussianFilter(im_dirty, filterSize))
+            #print(f'2D gasussina Filter: {time.time()-initial_time}')
+            #initial_time = time.time()
+            imgs.append(old_gaussianFilter(im_dirty, filterSize))
+            #print(f'Separated gaussian filter: {time.time()-initial_time}')
     return imgs
 
 
@@ -180,12 +197,13 @@ def quotientImage(im, sigma):
     blurred_im = addGaussianNoise(im, sigma)
     result = im.copy()
     result = result/blurred_im
+    plt.imshow(result)
     return result
 
 def testQuotientImage(im, params):
     imgs = []
-    for sigma in params['sd_gass_noise']:
-        imgs.extend((np.array(im), quotientImage(sigma)))
+    for sigma in params['sd_gauss_noise']:
+        imgs.extend((np.array(im), quotientImage(im, sigma)))
     return imgs
 
 # -----------------
@@ -196,9 +214,9 @@ path_input = './imgs-P2/'
 path_output = './imgs-out-P2/'
 bAllFiles = False
 if bAllFiles:
-    files = glob.glob(path_input + "*.pgm")
+    files = glob.glob(path_input + "*")
 else:
-    files = [path_input + 'lena256.pgm']  # lena256, lena512
+    files = [path_input + 'peppers.ppm']  # lena256, lena512, peppers.ppm
 
 # --------------------
 # Tests to perform
@@ -210,7 +228,7 @@ bAllTests = False
 if bAllTests:
     tests = testsNoises + testsFilters
 else:
-    tests = ['testQuotientImage']#['testAverageFilter', 'testSeparableAverageFilter']
+    tests = ['testGaussianFilter']#['testAverageFilter', 'testSeparableAverageFilter']
 
 # -------------------------------------------------------------------
 # Dictionary of user-friendly names for each function ("test") name
@@ -230,7 +248,8 @@ bSaveResultImgs = False
 # Parameters of noises
 # -----------------------
 percentagesSandP = [3]  # ratio (%) of image pixes affected by salt and pepper noise
-gauss_sigmas_noise = [10]#[3, 5, 10]  # standard deviation (for the [0,255] range) for Gaussian noise
+gauss_sigmas_noise = [20]#[3, 5, 10]  # standard deviation (for the [0,255] range) for Gaussian noise
+
 
 # -----------------------
 # Parameters of filters
@@ -240,7 +259,7 @@ gauss_sigmas_filter = [1.2]  # standard deviation for Gaussian filter
 avgFilter_sizes = [3, 7, 15]  # sizes of mean (average) filter
 medianFilter_sizes = [3, 7, 15]  # sizes of median filter
 
-testsUsingPIL = ['testSandPNoise']  # which test(s) uses PIL images as input (instead of NumPy 2D arrays)
+testsUsingPIL = ['testSandPNoise', 'testGaussianNoise', 'testGaussianFilter']  # which test(s) uses PIL images as input (instead of NumPy 2D arrays)
 
 
 # -----------------------------------------
@@ -250,7 +269,7 @@ testsUsingPIL = ['testSandPNoise']  # which test(s) uses PIL images as input (in
 def doTests():
     print("Testing on", files)
     for imfile in files:
-        im_pil = Image.open(imfile).convert('L')
+        im_pil = Image.open(imfile)
         im = np.array(im_pil)  # from Image to array
 
         for test in tests:

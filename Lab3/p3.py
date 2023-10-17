@@ -11,7 +11,7 @@ import glob
 import os
 import sys
 
-sys.path.append("../../p1/code") # set the path for visualPercepUtils.py
+sys.path.append("/home/usuario/Documents/SistemesInteligents/SistemesInteligents-ComputerVision/Lab1") # set the path for visualPercepUtils.py
 import visualPercepUtils as vpu
 
 # ----------------------
@@ -26,12 +26,21 @@ def FT(im):
 def IFT(ft):
     return fft.ifft2(fft.ifftshift(ft))  # assumes ft is shifted and therefore reverses the shift before IFT
 
+def exercici_1(abs_mag, log_mag, phase):
+    print(f'Magnitude Abs min:{np.min(abs_mag)} max:{np.max(abs_mag)}')
+    print(f'Magnitude Log min:{np.min(log_mag)} max:{np.max(log_mag)}')
+    
+    fig, axs = plt.subplots(1, 3)
+    axs[0].boxplot([np.min(abs_mag),np.max(abs_mag)])
+    axs[0].boxplot([np.min(log_mag),np.max(log_mag)])
+    axs[0].hist(phase)
 
 def testFT(im, params=None):
     ft = FT(im)
     #print(ft.shape)
     phase = np.angle(ft)
     magnitude = np.log(np.absolute(ft))
+    exercisi_1(magnitude, np.absolute(ft), phase)
     bMagnitude = True
     if bMagnitude:
         im2 = np.absolute(IFT(ft))  # IFT consists of complex number. When applied to real-valued data the imaginary part should be zero, but not exactly for numerical precision issues
@@ -39,7 +48,6 @@ def testFT(im, params=None):
         im2 = np.real(IFT(ft)) # with just the module we can't appreciate the effect of a shift in the signal (e.g. if we use fftshift but not ifftshift, or viceversa)
         # Important: one case where np.real() is appropriate but np.absolute() is not is where the sign in the output is relevant
     return [magnitude, phase, im2]
-
 
 # -----------------------
 # Convolution theorem
