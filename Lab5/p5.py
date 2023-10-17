@@ -60,8 +60,8 @@ def reportPropertiesRegions(labelIm,title):
 # -----------------
 # Test image files
 # -----------------
-path_input = './imgs-P5/'
-path_output = './imgs-out-P5/'
+path_input = './Lab5/imgs-P5/'
+path_output = './Lab5/imgs-out-P5/'
 bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*.p??")

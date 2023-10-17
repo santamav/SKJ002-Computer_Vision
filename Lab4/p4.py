@@ -60,8 +60,8 @@ def findPeaks(H, thetas, rhos, nPeaksMax=None):
 # -----------------
 # Test image files
 # -----------------
-path_input = './imgs-P4/'
-path_output = './imgs-out-P4/'
+path_input = './Lab4/imgs-P4/'
+path_output = './Lab4/imgs-out-P4/'
 bAllFiles = True
 if bAllFiles:
     files = glob.glob(path_input + "*.p??")

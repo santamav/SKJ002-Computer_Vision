@@ -210,8 +210,8 @@ def testQuotientImage(im, params):
 # Test image files
 # -----------------
 
-path_input = './imgs-P2/'
-path_output = './imgs-out-P2/'
+path_input = './Lab2/imgs-P2/'
+path_output = './Lab2/imgs-out-P2/'
 bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*")

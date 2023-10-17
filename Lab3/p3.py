@@ -147,8 +147,8 @@ def testBandPassFilter(im, params=None):
 # -----------------
 # Test image files
 # -----------------
-path_input = './imgs-P3/'
-path_output = './imgs-out-P3/'
+path_input = './Lab3/imgs-P3/'
+path_output = './Lab3/imgs-out-P3/'
 bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*.pgm")

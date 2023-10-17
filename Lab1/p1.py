@@ -34,8 +34,8 @@ def testBrightenImg(im):
     im2=brightenImg(im,p)
     return [im2]
 
-path_input = './imgs-P1/'
-path_output = './imgs-out-P1/'
+path_input = './Lab1/imgs-P1/'
+path_output = './Lab1/imgs-out-P1/'
 bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*") #Changed from ~~files = glob.blob(path_input + "*.pgm")~~ so it reads all the files
