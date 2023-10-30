@@ -3,6 +3,7 @@
 
 from PIL import Image
 from scipy.ndimage import filters
+import scipy.signal
 import numpy.fft as fft
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,7 +41,7 @@ def testFT(im, params=None):
     #print(ft.shape)
     phase = np.angle(ft)
     magnitude = np.log(np.absolute(ft))
-    exercisi_1(magnitude, np.absolute(ft), phase)
+    exercici_1(magnitude, np.absolute(ft), phase)
     bMagnitude = True
     if bMagnitude:
         im2 = np.absolute(IFT(ft))  # IFT consists of complex number. When applied to real-valued data the imaginary part should be zero, but not exactly for numerical precision issues
@@ -106,6 +107,55 @@ def testConvTheo(im, params=None):
 
 
 # -----------------------------------
+# Comvolution theorem for gaussian filter
+# -----------------------------------
+def gaussianMask(sigma=5, n=16):
+    gv1d = scipy.signal.gaussian(n, sigma)
+    return np.outer(gv1d, gv1d)
+
+def gaussianFilterSpace(im, sigma=5, n=16):
+    return filters.convolve(im, gaussianMask(sigma, n))
+
+def gaussianFilterFrequency(im, sigma=5, n=16):
+    filterMask = gaussianMask(sigma, n)  # the usually small mask
+    filterBig = np.zeros_like(im, dtype=float)  # as large as the image (dtype is important here!)
+
+    # Now, place filter (the "small" filter mask) at the center of the "big" filter
+
+    ## First, get sizes
+    w, h = filterMask.shape
+    w2, h2 = w / 2, h / 2  # half width and height of the "small" mask
+    W, H = filterBig.shape
+    W2, H2 = W / 2, H / 2  # half width and height of the "big" mask
+
+    ## Then, paste the small mask at the center using the sizes computed before as an aid
+    filterBig[int(W2 - w2):int(W2 + w2), int(H2 - h2):int(H2 + h2)] = filterMask
+
+    # FFT of the big filter
+    filterBig = fft.ifftshift(filterBig)  # shift origin at upper-left corner
+
+    # Finally, IFT of the element-wise product of the FT's
+    return np.absolute(IFT(FT(im) * FT(filterBig)))  # both '*' and multiply() perform elementwise product
+
+def testConvTheoGaussian(im, params=None):
+    sigma = params['sigma']
+    n = params['n']
+
+    # image filtered with a convolution in spatial domain
+    imFiltSpace = gaussianFilterSpace(im, sigma, n)
+
+    # image filtered in frequency domain
+    imFiltFreq = gaussianFilterFrequency(im, sigma, n)
+
+    # How much do they differ?
+    # To quantify the difference, we use the Root Mean Square Measure (https://en.wikipedia.org/wiki/Root_mean_square)
+    margin = 5  # exclude some outer pixels to reduce the influence of border effects
+    rms = np.linalg.norm(imFiltSpace[margin:-margin, margin:-margin] - imFiltFreq[margin:-margin, margin:-margin], 2) / np.prod(im.shape)
+    print("Images filtered in space and frequency differ in (RMS):", rms)
+
+    return [imFiltSpace, imFiltFreq]
+
+# -----------------------------------
 # High-, low- and band-pass filters
 # -----------------------------------
 
@@ -160,7 +210,8 @@ else:
 # --------------------
 bAllTests = True
 if bAllTests:
-    tests = ['testFT', 'testConvTheo', 'testBandPassFilter']
+    tests = ['testConvTheoGaussian']
+    #tests = ['testFT', 'testConvTheo', 'testBandPassFilter']
 else:
     tests = ['testFT']
     tests = ['testConvTheo']
@@ -172,7 +223,8 @@ else:
 
 nameTests = {'testFT': '2D Fourier Transform',
              'testConvTheo': 'Convolution Theorem (tested on mean filter)',
-             'testBandPassFilter': 'Frequency-based filters ("high/low/band-pass")'
+             'testBandPassFilter': 'Frequency-based filters ("high/low/band-pass")',
+             'testConvTheoGaussian': 'Convolution Theorem (tested on gaussian filter)'
              }
 
 bSaveResultImgs = False
@@ -197,6 +249,11 @@ def doTests():
             elif test is "testConvTheo":
                 params = {}
                 params['filterSize'] = 7
+                subTitle = ": I, I*M, IFT(FT(I).FT(M))"
+            elif test is "testConvTheoGaussian":
+                params = {}
+                params['sigma'] = 5
+                params['n'] = 16
                 subTitle = ": I, I*M, IFT(FT(I).FT(M))"
             else:
                 params = {}

@@ -12,7 +12,7 @@ from skimage import measure
 
 from skimage.morphology import disk, square, closing, opening # for the mathematically morphology part
 
-sys.path.append("../../p1/code")
+sys.path.append("/home/usuario/Documents/SistemesInteligents/SistemesInteligents-ComputerVision/Lab1")
 import visualPercepUtils as vpu
 
 bStudentVersion=True
@@ -85,7 +85,7 @@ else:
 nameTests = {'testOtsu': "thresholding with Otsu's method",
              'labelConnectedComponents': 'Labelling conected components'}
 
-myThresh = 180  # use your own value here
+myThresh = 110  # use your own value here
 diskSizeForClosing = 2  # don't worry about this
 diskSizeForOpening = 5  # don't worry about this
 
