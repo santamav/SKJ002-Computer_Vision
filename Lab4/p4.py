@@ -31,9 +31,18 @@ def convolveSobel(im, axis=1):
     return filters.convolve(im, mask)
 
 def testSobel(im, params=None):
-    gx = filters.sobel(im, 1)
-    #gx_convolved = convolveSobel(im, 1) + convolveSobel(im, 0)
-    return [gx]
+    # gx = filters.sobel(im, 1)
+    threshold = params['threshold']
+    # Normalize image values
+    im = im / 255
+    # Compute the convolutions
+    gx_convolved = convolveSobel(im, 1)
+    gy_convolved = convolveSobel(im, 0)
+    # Get the magnitude
+    magnitude = np.sqrt(gx_convolved**2 + gy_convolved**2)
+    # Binarize the image to 0 and 1
+    magnitude = (magnitude > threshold).astype(float)
+    return [magnitude]
 
 def testCanny(im, params=None):
     sigma = params['sigma']
@@ -75,10 +84,10 @@ bAllTests = False
 if bAllTests:
     tests = ['testSobel', 'testCanny', 'testHough']
 else:
-    #tests = ['testSobel']
+    tests = ['testSobel']
     #tests = ['testCanny']
     #tests = ['testHough']
-    tests = ['testCannyForValues']
+    #tests = ['testCannyForValues']
 
 # -------------------------------------------------------------------
 # Dictionary of user-friendly names for each function ("test") name
@@ -112,6 +121,7 @@ def doTests():
     for test in tests:
         if test in ["testSobel", "testCannyForValues"]:
             params = {}
+            params['threshold'] = 0.5
         elif test in ["testCanny", "testHough"]:
             params = {}
             params['sigma'] = 5  # 15

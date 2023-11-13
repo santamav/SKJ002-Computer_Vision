@@ -134,13 +134,18 @@ def gaussianFilterSep(im, sigma=5, n=16):
 
     return result
 
-def old_gaussianFilter(im, sigma =5):
+def colorChannels_gaussianFilter(im, sigma =5):
     Image.fromarray(im).show()
     result = np.copy(im)
     result[:,:,0] = filters.gaussian_filter(im[:,:,0], sigma)
     result[:,:,1] = filters.gaussian_filter(im[:,:,1], sigma)
     result[:,:,2] = filters.gaussian_filter(im[:,:,2], sigma)
     Image.fromarray(result).show()
+    return result
+
+def old_gaussianFilter(im, sigma=5):
+    result = im.copy()
+    result = filters.gaussian_filter(result, sigma)
     return result
 
 def gaussianFilter(im, sigma=5, n=16):
@@ -166,10 +171,21 @@ def testGaussianFilter(im_clean, params):
             #imgs.append(gaussianFilter(im_dirty, filterSize))
             #print(f'2D gasussina Filter: {time.time()-initial_time}')
             #initial_time = time.time()
-            imgs.append(old_gaussianFilter(im_dirty, filterSize))
+            imgs.append(gaussianFilter(im_dirty, filterSize))
             #print(f'Separated gaussian filter: {time.time()-initial_time}')
     return imgs
 
+
+def gaussianFilterEx3(im_clean, params):
+    imgs = []
+    for sigma in params['sd_gauss_noise']:
+        im_dirty = addGaussianNoise(im_clean, sigma)
+        for filterSize in params['sd_gauss_filter']:
+            im_dirty = addGaussianNoise(im_clean, sigma)
+            imgs.append(np.array(im_dirty))
+            imgs.append(gaussianFilter(im_dirty, filterSize))
+            imgs.append(old_gaussianFilter(im_dirty, filterSize))
+    return imgs
 
 # -----------------
 # Median filter
@@ -216,7 +232,7 @@ bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*")
 else:
-    files = [path_input + 'peppers.ppm']  # lena256, lena512, peppers.ppm
+    files = [path_input + 'lena512.pgm']  # lena256.pgm, lena512.pgm, peppers.ppm
 
 # --------------------
 # Tests to perform
@@ -228,7 +244,7 @@ bAllTests = False
 if bAllTests:
     tests = testsNoises + testsFilters
 else:
-    tests = ['testGaussianFilter']#['testAverageFilter', 'testSeparableAverageFilter']
+    tests = ['gaussianFilterEx3']#['testAverageFilter', 'testSeparableAverageFilter', 'testGaussianFilter']
 
 # -------------------------------------------------------------------
 # Dictionary of user-friendly names for each function ("test") name
@@ -240,7 +256,8 @@ nameTests = {'testGaussianNoise': 'Gaussian noise',
              'testGaussianFilter': 'Gaussian filter',
              'testMedianFilter': 'Median filter',
              'testSeparableAverageFilter':'Separable Average',
-             'testQuotientImage':'Quotient Image'}
+             'testQuotientImage':'Quotient Image',
+             'gaussianFilterEx3':'Gaussian Filter Ex3'}
 
 bSaveResultImgs = False
 
@@ -259,7 +276,7 @@ gauss_sigmas_filter = [1.2]  # standard deviation for Gaussian filter
 avgFilter_sizes = [3, 7, 15]  # sizes of mean (average) filter
 medianFilter_sizes = [3, 7, 15]  # sizes of median filter
 
-testsUsingPIL = ['testSandPNoise', 'testGaussianNoise', 'testGaussianFilter']  # which test(s) uses PIL images as input (instead of NumPy 2D arrays)
+testsUsingPIL = ['gaussianFilterEx3', 'testSandPNoise', 'testGaussianNoise', 'testGaussianFilter']  # which test(s) uses PIL images as input (instead of NumPy 2D arrays)
 
 
 # -----------------------------------------
@@ -298,6 +315,12 @@ def doTests():
                 params['sd_gauss_noise'] = gauss_sigmas_noise
                 params['sd_gauss_filter'] = gauss_sigmas_filter
                 subTitle = r", $\sigma_n$ (noise): " + str(gauss_sigmas_noise) + ", $\sigma_f$ (filter): " + str(gauss_sigmas_filter)
+            elif test == "gaussianFilterEx3":
+                params = {}
+                params['sd_gauss_noise'] = gauss_sigmas_noise
+                params['sd_gauss_filter'] = gauss_sigmas_filter
+                subTitle = r", $\sigma_n$ (noise): " + str(gauss_sigmas_noise) + ", $\sigma_f$ (filter): " + str(gauss_sigmas_filter)
+
             elif test == 'testQuotientImage':
                 params = {}
                 params['sd_gauss_noise'] = gauss_sigmas_noise
