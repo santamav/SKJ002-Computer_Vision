@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PIL import Image
-from scipy.ndimage import filters
+import scipy.ndimage as filters
 from scipy.signal import medfilt2d
 import scipy.signal
 import numpy as np
@@ -124,14 +124,13 @@ def testAverageFilter(im_clean, params):
 # -----------------
 # Gaussian filter
 # -----------------
-def gaussianFilterSep(im, sigma=5, n=16):
+def gaussianFilterSep(im, sigma=5, n=3):
     gv1d = scipy.signal.gaussian(n, sigma)
     result = im.copy()
     #first dimension convolution
     result = filters.convolve(result, gv1d.reshape(-1, 1))
     #second dimension convolution
     result = filters.convolve(result, gv1d.T.reshape(1, -1))
-
     return result
 
 def colorChannels_gaussianFilter(im, sigma =5):
@@ -151,11 +150,12 @@ def old_gaussianFilter(im, sigma=5):
 def gaussianFilter(im, sigma=5, n=16):
     # im is PIL image
     gv1d = scipy.signal.gaussian(n, sigma)
-    #plt.imshow(gv1d.reshape(1, -1))
+    plt.imshow(gv1d.reshape(1, -1))
     gv2d = np.outer(gv1d, gv1d)
     #plt.imshow(gv2d)
     result = im.copy()
-    result = filters.convolve(result, gv2d)
+    result = filters.convolve(result, gv2d)     
+    print(result)  
     return result
 
 
@@ -168,10 +168,10 @@ def testGaussianFilter(im_clean, params):
         for filterSize in params['sd_gauss_filter']:
             imgs.append(np.array(im_dirty))
             #initial_time = time.time()
-            #imgs.append(gaussianFilter(im_dirty, filterSize))
+            imgs.append(gaussianFilter(im_dirty, filterSize))
             #print(f'2D gasussina Filter: {time.time()-initial_time}')
             #initial_time = time.time()
-            imgs.append(gaussianFilter(im_dirty, filterSize))
+            #imgs.append(gaussianFilterSep(im_dirty, filterSize))
             #print(f'Separated gaussian filter: {time.time()-initial_time}')
     return imgs
 
@@ -210,7 +210,7 @@ def testMedianFilter(im_clean, params):
 # Quotient Image
 # --------------------------
 def quotientImage(im, sigma):
-    blurred_im = addGaussianNoise(im, sigma)
+    blurred_im = gaussianFilter(im, sigma, 15)
     result = im.copy()
     result = result/blurred_im
     plt.imshow(result)
@@ -218,8 +218,8 @@ def quotientImage(im, sigma):
 
 def testQuotientImage(im, params):
     imgs = []
-    for sigma in params['sd_gauss_noise']:
-        imgs.extend((np.array(im), quotientImage(im, sigma)))
+    for filter_size in params['sd_gauss_filter']:
+        imgs.append(quotientImage(im, filter_size))
     return imgs
 
 # -----------------
@@ -232,7 +232,7 @@ bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*")
 else:
-    files = [path_input + 'lena512.pgm']  # lena256.pgm, lena512.pgm, peppers.ppm
+    files = [path_input + 'lena256.pgm']  # lena256.pgm, lena512.pgm, peppers.ppm
 
 # --------------------
 # Tests to perform
@@ -244,7 +244,7 @@ bAllTests = False
 if bAllTests:
     tests = testsNoises + testsFilters
 else:
-    tests = ['gaussianFilterEx3']#['testAverageFilter', 'testSeparableAverageFilter', 'testGaussianFilter']
+    tests = ['testQuotientImage']#['gaussianFilterEx3']#['testAverageFilter', 'testSeparableAverageFilter', 'testGaussianFilter']
 
 # -------------------------------------------------------------------
 # Dictionary of user-friendly names for each function ("test") name
@@ -265,7 +265,7 @@ bSaveResultImgs = False
 # Parameters of noises
 # -----------------------
 percentagesSandP = [3]  # ratio (%) of image pixes affected by salt and pepper noise
-gauss_sigmas_noise = [20]#[3, 5, 10]  # standard deviation (for the [0,255] range) for Gaussian noise
+gauss_sigmas_noise = [3]#[3, 5, 10]  # standard deviation (for the [0,255] range) for Gaussian noise
 
 
 # -----------------------
@@ -276,7 +276,7 @@ gauss_sigmas_filter = [1.2]  # standard deviation for Gaussian filter
 avgFilter_sizes = [3, 7, 15]  # sizes of mean (average) filter
 medianFilter_sizes = [3, 7, 15]  # sizes of median filter
 
-testsUsingPIL = ['gaussianFilterEx3', 'testSandPNoise', 'testGaussianNoise', 'testGaussianFilter']  # which test(s) uses PIL images as input (instead of NumPy 2D arrays)
+testsUsingPIL = ['testQuotientImage' ,'gaussianFilterEx3', 'testSandPNoise', 'testGaussianNoise', 'testGaussianFilter']  # which test(s) uses PIL images as input (instead of NumPy 2D arrays)
 
 
 # -----------------------------------------
@@ -323,7 +323,7 @@ def doTests():
 
             elif test == 'testQuotientImage':
                 params = {}
-                params['sd_gauss_noise'] = gauss_sigmas_noise
+                params['sd_gauss_filter'] = gauss_sigmas_filter
                 subTitle = f", quotient image"
             if test in testsUsingPIL:
                 outs_pil = eval(test)(im_pil, params)

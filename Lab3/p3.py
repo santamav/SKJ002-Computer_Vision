@@ -12,7 +12,7 @@ import glob
 import os
 import sys
 
-sys.path.append("/home/usuario/Documents/SistemesInteligents/SistemesInteligents-ComputerVision/Lab1") # set the path for visualPercepUtils.py
+sys.path.append("/home/vicentamen/Documents/Intelligent Systems/Sistemes-Inteligents_Computer-Vision/Lab1") # set the path for visualPercepUtils.py
 import visualPercepUtils as vpu
 
 # ----------------------
@@ -33,15 +33,18 @@ def exercici_1(abs_mag, log_mag, phase):
     
     fig, axs = plt.subplots(1, 3)
     axs[0].boxplot([np.min(abs_mag),np.max(abs_mag)])
-    axs[0].boxplot([np.min(log_mag),np.max(log_mag)])
-    axs[0].hist(phase)
+    axs[0].set_title('Magnitude Abs')
+    axs[1].boxplot([np.min(log_mag),np.max(log_mag)])
+    axs[1].set_title('Magnitude Log')
+    axs[2].hist(phase)
+    axs[2].set_title('Phase')
 
 def testFT(im, params=None):
     ft = FT(im)
     #print(ft.shape)
     phase = np.angle(ft)
     magnitude = np.log(np.absolute(ft))
-    exercici_1(magnitude, np.absolute(ft), phase)
+    exercici_1(np.absolute(ft), magnitude, phase)
     bMagnitude = True
     if bMagnitude:
         im2 = np.absolute(IFT(ft))  # IFT consists of complex number. When applied to real-valued data the imaginary part should be zero, but not exactly for numerical precision issues
@@ -210,7 +213,7 @@ else:
 # --------------------
 bAllTests = True
 if bAllTests:
-    tests = ['testConvTheoGaussian']
+    tests = ['testFT']#['testConvTheoGaussian']
     #tests = ['testFT', 'testConvTheo', 'testBandPassFilter']
 else:
     tests = ['testFT']
