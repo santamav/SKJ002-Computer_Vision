@@ -177,14 +177,19 @@ def testGaussianFilter(im_clean, params):
 
 
 def gaussianFilterEx3(im_clean, params):
+    # This function turned out to be too similar to testAverageFilter
+    # This is a good sign that code factorization is called for :)
     imgs = []
     for sigma in params['sd_gauss_noise']:
         im_dirty = addGaussianNoise(im_clean, sigma)
         for filterSize in params['sd_gauss_filter']:
-            im_dirty = addGaussianNoise(im_clean, sigma)
             imgs.append(np.array(im_dirty))
+            initial_time = time.time()
             imgs.append(gaussianFilter(im_dirty, filterSize))
-            imgs.append(old_gaussianFilter(im_dirty, filterSize))
+            print(f'2D gasussina Filter: {time.time()-initial_time}')
+            initial_time = time.time()
+            imgs.append(gaussianFilterSep(im_dirty, filterSize))
+            print(f'Separated gaussian filter: {time.time()-initial_time}')
     return imgs
 
 # -----------------

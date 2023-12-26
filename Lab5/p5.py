@@ -12,7 +12,7 @@ from skimage import measure
 
 from skimage.morphology import disk, square, closing, opening # for the mathematically morphology part
 
-sys.path.append("/home/usuario/Documents/SistemesInteligents/SistemesInteligents-ComputerVision/Lab1")
+sys.path.append("/home/vicentamen/Documents/Intelligent Systems/Sistemes-Inteligents_Computer-Vision/Lab1/")
 import visualPercepUtils as vpu
 
 bStudentVersion=True
@@ -48,6 +48,28 @@ def labelConnectedComponents(im, params=None):
     binImProc = fillGapsThenRemoveSmallRegions(im, params)[1]
     return [binIm, binImProc,
             measure.label(binIm, background=0), measure.label(binImProc, background=0)]
+    
+# Dictionary of coin areas (in pixels)
+mm_to_inches = 0.0393701
+coins_dict = {
+    '1€': np.pi * ((23 * mm_to_inches)/2 * 50)**2,
+    '10 cents': np.pi * ((19.5 * mm_to_inches)/2 * 50)**2,
+}
+# Classify coins based on their area
+def classify_coins(area):
+    result = ''
+    min_diff = np.inf
+    for coin in coins_dict:
+        # Get area of the coin
+        coin_area = coins_dict[coin]
+        # Calculate difference between coin areas
+        diff = np.abs(coin_area - area)
+        if(diff < min_diff):
+            min_diff = diff
+            result = coin
+    return result
+        
+    
 
 def reportPropertiesRegions(labelIm,title):
     print("* * "+title)
@@ -56,13 +78,39 @@ def reportPropertiesRegions(labelIm,title):
         print("Region", r + 1, "(label", str(region.label) + ")")
         print("\t area: ", region.area)
         print("\t perimeter: ", round(region.perimeter, 1))  # show only one decimal place
+        # If there is no perimeter it canno have circularity
+        if(region.perimeter == 0): continue
+        # Calculate circularity
+        circularity = 4 * np.pi * region.area / (region.perimeter ** 2)
+        # Check if the region is a coin
+        circularity_threshold = 0.7
+        if circularity > circularity_threshold:
+            print("\t circularity: ", round(circularity, 2), classify_coins(region.area))
+
+def reportPropertiesRegions_ex2(labelIm,title):
+    print("* * "+title)
+    regions = measure.regionprops(labelIm)
+    for r, region in enumerate(regions):  # enumerate() is often handy: it provides both the index and the element
+        print("Region", r + 1, "(label", str(region.label) + ")")
+        print("\t area: ", region.area)
+        print("\t perimeter: ", round(region.perimeter, 1))  # show only one decimal place
+        # If there is no perimeter it canno have circularity
+        if(region.perimeter == 0): continue
+        # Calculate circularity
+        circularity = 4 * np.pi * region.area / (region.perimeter ** 2)
+        # Check if the region is a coin
+        circularity_threshold = 0.7
+        if circularity > circularity_threshold:
+            print("\t circularity: ", round(circularity, 2), " (probably a coin)")
+        
+        
 
 # -----------------
 # Test image files
 # -----------------
 path_input = './Lab5/imgs-P5/'
 path_output = './Lab5/imgs-out-P5/'
-bAllFiles = True
+bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*.p??")
 else:
@@ -73,7 +121,7 @@ else:
 # --------------------
 bAllTests = True
 if bAllTests:
-    tests = ['testOtsu', 'labelConnectedComponents']
+    tests = ['labelConnectedComponents']#['testOtsu', 'labelConnectedComponents']
 else:
     tests = ['fillGaps']
     tests = ['labelConnectedComponents']
@@ -116,6 +164,7 @@ def doTests():
                              "My threshold: " + str(myThresh)]
                 m = n = 2
             else:
+                m = n = 2
                 outs_np_plot = outs_np
             print(len(outs_np_plot))
             vpu.showInGrid([im] + outs_np_plot, m=m, n=n, title=title, subtitles=subtitles)

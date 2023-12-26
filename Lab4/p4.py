@@ -11,7 +11,7 @@ from skimage.transform import hough_line, hough_line_peaks  # , probabilistic_ho
 from scipy import ndimage as ndi
 from copy import deepcopy
 
-sys.path.append("/home/usuario/Documents/SistemesInteligents/SistemesInteligents-ComputerVision/Lab1")
+sys.path.append("/home/vicentamen/Documents/Intelligent Systems/Sistemes-Inteligents_Computer-Vision/Lab1/")
 import visualPercepUtils as vpu
 
 bLecturerVersion=False
