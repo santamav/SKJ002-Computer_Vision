@@ -55,6 +55,7 @@ coins_dict = {
     '1€': np.pi * ((23 * mm_to_inches)/2 * 50)**2,
     '10 cents': np.pi * ((19.5 * mm_to_inches)/2 * 50)**2,
 }
+
 # Classify coins based on their area
 def classify_coins(area):
     result = ''
@@ -71,7 +72,7 @@ def classify_coins(area):
         
     
 
-def reportPropertiesRegions(labelIm,title):
+def reportPropertiesRegions_ex3(labelIm,title):
     print("* * "+title)
     regions = measure.regionprops(labelIm)
     for r, region in enumerate(regions):  # enumerate() is often handy: it provides both the index and the element
@@ -87,7 +88,7 @@ def reportPropertiesRegions(labelIm,title):
         if circularity > circularity_threshold:
             print("\t circularity: ", round(circularity, 2), classify_coins(region.area))
 
-def reportPropertiesRegions_ex2(labelIm,title):
+def reportPropertiesRegions(labelIm,title):
     print("* * "+title)
     regions = measure.regionprops(labelIm)
     for r, region in enumerate(regions):  # enumerate() is often handy: it provides both the index and the element
@@ -99,9 +100,11 @@ def reportPropertiesRegions_ex2(labelIm,title):
         # Calculate circularity
         circularity = 4 * np.pi * region.area / (region.perimeter ** 2)
         # Check if the region is a coin
+        label = " (probably not a coin)"
         circularity_threshold = 0.7
         if circularity > circularity_threshold:
-            print("\t circularity: ", round(circularity, 2), " (probably a coin)")
+           label = " (probably a coin)" 
+        print("\t circularity: ", round(circularity, 2), label)
         
         
 
@@ -173,6 +176,7 @@ def doTests():
                 labelImOriginalBinaryImage = outs_np_plot[2]
                 labelImProcessedBinaryImage = outs_np_plot[3]
                 vpu.showImWithColorMap(labelImOriginalBinaryImage,'jet') # the default color map, 'spectral', does not work in lab computers
+                #vpu.showImWithColorMap(labelImProcessedBinaryImage,'jet') # the default color map, 'spectral', does not work in lab computers
                 plt.show(block=True)
                 titleForBinaryImg = "From unprocessed binary image"
                 titleForProcesImg = "From filtered binary image"
