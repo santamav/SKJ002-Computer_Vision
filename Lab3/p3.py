@@ -12,7 +12,7 @@ import glob
 import os
 import sys
 
-sys.path.append("/home/vicentamen/Documents/Intelligent Systems/Sistemes-Inteligents_Computer-Vision/Lab1") # set the path for visualPercepUtils.py
+sys.path.append("/home/vicentamen/Documents/Intelligent_Systems/SKJ002-Computer_Vision/Lab1") # set the path for visualPercepUtils.py
 import visualPercepUtils as vpu
 
 # ----------------------
@@ -107,7 +107,6 @@ def testConvTheo(im, params=None):
     print("Images filtered in space and frequency differ in (RMS):", rms)
 
     return [imFiltSpace, imFiltFreq]
-
 
 # -----------------------------------
 # Comvolution theorem for gaussian filter
@@ -213,7 +212,7 @@ else:
 # --------------------
 bAllTests = True
 if bAllTests:
-    tests = ['testFT']#['testConvTheoGaussian']
+    tests = ['testConvTheoGaussian']#['testConvTheoGaussian']
     #tests = ['testFT', 'testConvTheo', 'testBandPassFilter']
 else:
     tests = ['testFT']

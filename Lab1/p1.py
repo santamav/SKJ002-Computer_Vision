@@ -19,10 +19,10 @@ def testHistEq(im):
     return [im2, cdf]
 
 def darkenImg(im,p=2):
-    return (im ** float(p)) / (255 ** (p - 1)) # try without the float conversion and see what happens
+    return (im[::,] ** float(p) / (255 ** (p-1))   ) # try without the float conversion and see what happens
 
 def brightenImg(im,p=2):
-    return np.power(255.0 ** (p - 1) * im, 1. / p)  # notice this NumPy function is different to the scalar math.pnp
+    return np.power(255.0 ** (p - 1) * im[::,], 1. / p)  # notice this NumPy function is different to the scalar math.pnp
 
 def testDarkenImg(im):
     im2 = darkenImg(im,p=2) #  Is "p=2" different here than in the function definition? Can we remove "p=" here?
@@ -40,9 +40,9 @@ bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*") #Changed from ~~files = glob.blob(path_input + "*.pgm")~~ so it reads all the files
 else:
-    files = [path_input + 'iglesia.pgm'] # iglesia,huesos, path_input + 'iglesia.pgm'
+    files = [path_input + 'peppers.ppm'] # iglesia,huesos, path_input + 'iglesia.pgm'
 
-bAllTests = True
+bAllTests = False
 if bAllTests:
     tests = ['testHistEq', 'testBrightenImg', 'testDarkenImg', 'testCheckboard']
 else:
@@ -88,7 +88,6 @@ def checkboardIm(im, n, m):
     height, width = im.shape[:2]
     cell_height = np.ceil(height / n).astype(int) # height//n
     cell_width = np.ceil(width / m).astype(int) # width//m
-    #TODO: Had an error with the las row and column when the division was an odd number
     # Create row and column indices for the cells
     row_indices = np.arange(height) // cell_height
     col_indices = np.arange(width) // cell_width
@@ -202,9 +201,9 @@ def doTests():
                 saveImage(imfile, im2, test)
 
 if __name__== "__main__":
-    #doTests()
+    doTests()
     #I could have added the functions to the tests array instead of calling them here
-    doCheckboardTest()
+    #doCheckboardTest()
     #doMultiHistTest()
     #doExpTransf()
 

@@ -68,9 +68,9 @@ def addGaussianNoise(im, sd):
     
     #if the mode is RGB, do the calculations for each band
     im_array = np.array(im)
-    im_array[:,:,0] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array.shape[1])),0,255).astype("uint8")
-    im_array[:,:,1] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array.shape[1])),0,255).astype("uint8")
-    im_array[:,:,2] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array.shape[1])),0,255).astype("uint8")
+    im_array[::,0] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array[1])),0,255).astype("uint8")
+    im_array[::,1] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array[1])),0,255).astype("uint8")
+    im_array[::,2] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array[1])),0,255).astype("uint8")
     return im_array
     
 def testGaussianNoise(im, sigmas):
@@ -139,12 +139,13 @@ def colorChannels_gaussianFilter(im, sigma =5):
     result[:,:,0] = filters.gaussian_filter(im[:,:,0], sigma)
     result[:,:,1] = filters.gaussian_filter(im[:,:,1], sigma)
     result[:,:,2] = filters.gaussian_filter(im[:,:,2], sigma)
+    # result[::,] = filters.gaussian_filter(im[::,], sigma )
     Image.fromarray(result).show()
     return result
 
 def old_gaussianFilter(im, sigma=5):
     result = im.copy()
-    result = filters.gaussian_filter(result, sigma)
+    result = filters.gaussian_filter(result, sigma).astype("uint8")
     return result
 
 def gaussianFilter(im, sigma=5, n=16):
@@ -168,7 +169,7 @@ def testGaussianFilter(im_clean, params):
         for filterSize in params['sd_gauss_filter']:
             imgs.append(np.array(im_dirty))
             #initial_time = time.time()
-            imgs.append(gaussianFilter(im_dirty, filterSize))
+            imgs.append(colorChannels_gaussianFilter(im_dirty, filterSize))
             #print(f'2D gasussina Filter: {time.time()-initial_time}')
             #initial_time = time.time()
             #imgs.append(gaussianFilterSep(im_dirty, filterSize))
@@ -237,7 +238,7 @@ bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*")
 else:
-    files = [path_input + 'lena256.pgm']  # lena256.pgm, lena512.pgm, peppers.ppm
+    files = [path_input + 'peppers.ppm']  # lena256.pgm, lena512.pgm, peppers.ppm
 
 # --------------------
 # Tests to perform
@@ -249,7 +250,7 @@ bAllTests = False
 if bAllTests:
     tests = testsNoises + testsFilters
 else:
-    tests = ['testQuotientImage']#['gaussianFilterEx3']#['testAverageFilter', 'testSeparableAverageFilter', 'testGaussianFilter']
+    tests = ['testGaussianFilter']#['testQuotientImage']#['gaussianFilterEx3']#['testAverageFilter', 'testSeparableAverageFilter', 'testGaussianFilter']
 
 # -------------------------------------------------------------------
 # Dictionary of user-friendly names for each function ("test") name
