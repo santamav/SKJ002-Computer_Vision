@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PIL import Image
-from scipy.ndimage import filters
+from scipy import ndimage as filters
 import scipy.signal
 import numpy.fft as fft
 import numpy as np
@@ -12,7 +12,7 @@ import glob
 import os
 import sys
 
-sys.path.append("/home/vicentamen/Documents/Intelligent_Systems/SKJ002-Computer_Vision/Lab1") # set the path for visualPercepUtils.py
+sys.path.append("Lab1/") # set the path for visualPercepUtils.py
 import visualPercepUtils as vpu
 
 # ----------------------
@@ -107,19 +107,23 @@ def testConvTheo(im, params=None):
     print("Images filtered in space and frequency differ in (RMS):", rms)
 
     return [imFiltSpace, imFiltFreq]
-
+False
 # -----------------------------------
 # Comvolution theorem for gaussian filter
 # -----------------------------------
-def gaussianMask(sigma=5, n=16):
-    gv1d = scipy.signal.gaussian(n, sigma)
-    return np.outer(gv1d, gv1d)
+def gaussianFilter(n, sigma):
+    x = np.linspace(-n//2, n//2, n)
+    y = np.linspace(-n//2, n//2, n)
+    xv, yv = np.meshgrid(x, y)
+    filterMask = np.exp(-(xv**2 + yv**2) / (2 * sigma**2))
+    return filterMask / np.sum(filterMask)
 
-def gaussianFilterSpace(im, sigma=5, n=16):
-    return filters.convolve(im, gaussianMask(sigma, n))
+def gaussianFilterSpace(im, n, sigma):
+    return filters.convolve(im, gaussianFilter(n, sigma))
 
-def gaussianFilterFrequency(im, sigma=5, n=16):
-    filterMask = gaussianMask(sigma, n)  # the usually small mask
+
+def gaussianFilterFrequency(im, n, sigma):
+    filterMask = gaussianFilter(n, sigma)  # the usually small mask
     filterBig = np.zeros_like(im, dtype=float)  # as large as the image (dtype is important here!)
 
     # Now, place filter (the "small" filter mask) at the center of the "big" filter
@@ -137,26 +141,40 @@ def gaussianFilterFrequency(im, sigma=5, n=16):
     filterBig = fft.ifftshift(filterBig)  # shift origin at upper-left corner
 
     # Finally, IFT of the element-wise product of the FT's
-    return np.absolute(IFT(FT(im) * FT(filterBig)))  # both '*' and multiply() perform elementwise product
+    return FT(im) * FT(filterBig) # both '*' and multiply() perform elementwise product
+
 
 def testConvTheoGaussian(im, params=None):
-    sigma = params['sigma']
-    n = params['n']
+    sizes = params['n']
+    sigmas = params['sigma']
+    imgs = []
+    
+    for n in sizes:
+        for sigma in sigmas:
+                # I, IFT(FT(I).FT(M), |FT(M)|, |FT(I)*FT(M)|
+                # Fourier transform of the filter
+                filterFt = FT(gaussianFilter(n, sigma))
 
-    # image filtered with a convolution in spatial domain
-    imFiltSpace = gaussianFilterSpace(im, sigma, n)
+                # image filtered with a convolution in spatial domain
+                imFiltSpace = gaussianFilterSpace(im, n, sigma)
 
-    # image filtered in frequency domain
-    imFiltFreq = gaussianFilterFrequency(im, sigma, n)
-
-    # How much do they differ?
-    # To quantify the difference, we use the Root Mean Square Measure (https://en.wikipedia.org/wiki/Root_mean_square)
-    margin = 5  # exclude some outer pixels to reduce the influence of border effects
-    rms = np.linalg.norm(imFiltSpace[margin:-margin, margin:-margin] - imFiltFreq[margin:-margin, margin:-margin], 2) / np.prod(im.shape)
-    print("Images filtered in space and frequency differ in (RMS):", rms)
-
-    return [imFiltSpace, imFiltFreq]
-
+                # image filtered in frequency domain
+                # TODO: Start time
+                ft_im = gaussianFilterFrequency(im, n, sigma)
+                imFiltFreq = np.absolute(IFT(ft_im))
+                # TODO: end time
+                # TODO: Store time
+                
+                ft_m = np.absolute(filterFt)
+                ft_im = np.log(np.absolute(ft_im))
+                
+                #imgs.append(imFiltFreq)
+                #imgs.append(ft_m)
+                imgs.append(ft_im)
+    
+    return imgs 
+            
+    
 # -----------------------------------
 # High-, low- and band-pass filters
 # -----------------------------------
@@ -248,15 +266,21 @@ def doTests():
             if test is "testFT":
                 params = {}
                 subTitle = ": I, |F|, ang(F), IFT(F)"
+                pltTitles = None
             elif test is "testConvTheo":
                 params = {}
                 params['filterSize'] = 7
                 subTitle = ": I, I*M, IFT(FT(I).FT(M))"
+                pltTitles = None
             elif test is "testConvTheoGaussian":
                 params = {}
-                params['sigma'] = 5
-                params['n'] = 16
-                subTitle = ": I, I*M, IFT(FT(I).FT(M))"
+                params['sigma'] = [1.2, 3.2, 16]
+                params['n'] = [7]
+                subTitle = ": I, IFT(FT(I).FT(M)"
+                #pltTitles = ['im', 'IFT(FT(I)*FT(M))', '|FT(M)|', '|FT(I)*FT(M)|']
+                pltTitles = ['sd=1.2', 'sd=3', 'sd=16']
+                m = None
+                n = 4
             else:
                 params = {}
                 r,R = 5,None # for low-pass filter
@@ -271,6 +295,7 @@ def doTests():
                 else:
                     filter="band pass" + " (r=" + str(r) + ", R=" + str(R) + ")"
                 subTitle = ", " + filter + " filter"
+                pltTitles = None
 
             if test in testsUsingPIL:
                 outs_pil = eval(test)(im_pil, params)
@@ -281,8 +306,10 @@ def doTests():
             print("# images", len(outs_np))
             print(len(outs_np))
 
-            vpu.showInGrid([im] + outs_np, title=nameTests[test] + subTitle)
-
-
+            vpu.showInGrid(outs_np, n=n, m=m, title=nameTests[test] + subTitle, subtitles=pltTitles)
+            #vpu.showInGrid([im] + outs_np, n=n, m=m, title=nameTests[test] + subTitle, subtitles=pltTitles)
+        
+    
+    
 if __name__ == "__main__":
     doTests()
