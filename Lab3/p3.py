@@ -400,9 +400,42 @@ def doExercise5():
         imgs.append(im_comb)
     
     vpu.showInGrid(imgs, title='Exercise 5', m=1, n=len(lmbdas), subtitles=[f'Lambda: {lmbda}' for lmbda in lmbdas])
+    
+def doExercise6():
+    lmda = 0.3
+    imgs = []
+    # Load images
+    im1 = np.array(Image.open(path_input + 'stp1.gif').convert('L'))
+    im2 = np.array(Image.open(path_input + 'stp2.gif').convert('L'))
+    # Combination of the images in the spatial domain
+    im_comb = (lmda * im1) + ((1 - lmda) * im2)    
+    # Transform of the combination
+    im_comb_esp = np.absolute(FT(im_comb))
+    imgs.append(im_comb_esp)
+    
+    # Combination of the images in the frequency domain
+    ft_im1 = FT(im1)
+    ft_im2 = FT(im2)
+    ft_comb = (lmda * ft_im1) + ((1 - lmda) * ft_im2)
+    im_comb_freq = np.absolute(IFT(ft_comb))
+    ft_comb = np.absolute(ft_comb)
+    imgs.append(ft_comb)
+    
+    #Empty white image
+    space = np.zeros_like(im1)
+    # Display images
+    vpu.showInGrid(imgs, title='Exercise 6', m=1, n=3, subtitles=['F(I1)*F(I2)', 'F(I1+I2)'])
+    
+        # How much do they differ?
+    # To quantify the difference, we use the Root Mean Square Measure (https://en.wikipedia.org/wiki/Root_mean_square)
+    margin = 5  # exclude some outer pixels to reduce the influence of border effects
+    rms = np.linalg.norm(im_comb_esp[margin:-margin, margin:-margin] - ft_comb[margin:-margin, margin:-margin], 2) / np.prod(ft_comb.shape)
+    print("Images filtered in space and frequency differ in (RMS):", rms)
+    
 
 if __name__ == "__main__":
     #doTests()
     #doFiltervsSpatial()
     #doTestMyFilter()
-    doExercise5()
+    #doExercise5()
+    doExercise6()
