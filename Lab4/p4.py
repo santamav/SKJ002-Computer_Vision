@@ -10,8 +10,9 @@ from skimage.transform import hough_line, hough_line_peaks  # , probabilistic_ho
 
 from scipy import ndimage as ndi
 from copy import deepcopy
+import math
 
-sys.path.append("/home/vicentamen/Documents/Intelligent Systems/Sistemes-Inteligents_Computer-Vision/Lab1/")
+sys.path.append("Lab1/")
 import visualPercepUtils as vpu
 
 bLecturerVersion=False
@@ -71,7 +72,7 @@ def findPeaks(H, thetas, rhos, nPeaksMax=None):
 # -----------------
 path_input = './Lab4/imgs-P4/'
 path_output = './Lab4/imgs-out-P4/'
-bAllFiles = True
+bAllFiles = False
 if bAllFiles:
     files = glob.glob(path_input + "*.p??")
 else:
@@ -84,7 +85,7 @@ bAllTests = False
 if bAllTests:
     tests = ['testSobel', 'testCanny', 'testHough']
 else:
-    tests = ['testSobel']
+    tests = ['testHough']
     #tests = ['testCanny']
     #tests = ['testHough']
     #tests = ['testCannyForValues']
@@ -98,22 +99,70 @@ nameTests = {'testSobel': 'Detector de Sobel',
              'testHough': 'Transformada de Hough'}
 
 bAddNoise = True
-bRotate = False
+bRotate = True
+
+# -----------------------
+# Salt & pepper noise
+# -----------------------
+
+def addSPNoise(im, percent):
+    # Now, im is a PIL image (not a NumPy array)
+    # percent is in range 0-100 (%)
+
+    # convert image it to numpy 2D array and flatten it
+    im_np = np.array(im)
+    im_shape = im_np.shape  # keep shape for later use (*)
+    im_vec = im_np.flatten()  # this is a 1D array # https://www.geeksforgeeks.org/differences-flatten-ravel-numpy/
+
+    # generate random locations
+    N = im_vec.shape[0]  # number of pixels
+    m = int(math.floor(percent * N / 100.0)) # number of pixels corresponding to the given percentage
+    locs = np.random.randint(0, N, m)  # generate m random positions in the 1D array (index 0 to N-1)
+
+    # generate m random S/P values (salt and pepper in the same proportion)
+    s_or_p = np.random.randint(0, 2, m)  # 2 random values (0=salt and 1=pepper)
+
+    # set the S/P values in the random locations
+    im_vec[locs] = 255 * s_or_p  # values after the multiplication will be either 0 or 255
+
+    # turn the 1D array into the original 2D image
+    im2 = im_vec.reshape(im_shape) # (*) here is where we use the shape that we saved earlier
+
+    return im2
 
 def testCannyForValues(im, params=None):
     sigma = [1, 1, 3, 3]
     T1 = [0.1, 0.4, 0.1, 0.01]
     T2 = [0.2, 0.6, 0.2, 0.02]
     
+    # add salt and peper noise
+    dirty = addSPNoise(im, 3)
+    # gaussian filter to the image
+    dirty = filters.gaussian_filter(dirty, 1)
+    
     result = []
+    fig, ax = plt.subplots(1, 5, figsize=(20, 5))
+    ax[0].imshow(dirty, cmap='gray')
+    ax[0].set_title("input")
     for i in range(len(sigma)):
-        edge = feature.canny(im, sigma=sigma[i], low_threshold=T1[i] * 255, high_threshold=T2[i] * 255, use_quantiles=False)
-        plt.imshow(edge)
-        plt.show()
+        edge = feature.canny(dirty, sigma=sigma[i], low_threshold=T1[i] * 255, high_threshold=T2[i] * 255, use_quantiles=False)
+        ax[i+1].imshow(edge, cmap='gray')
+        ax[i+1].set_title(f"Sigma: {sigma[i]}, T1: {T1[i]}, T2: {T2[i]}")
         result = edge
+        
+    plt.show()
     return [result]
     
+rotation = 45
 
+def doHoughWithRotations():
+    global rotation  # Add this line to access the global variable
+    rotations = [0, 15, 45, 90, 180]
+    
+    for r in rotations:
+        rotation = r
+        doTests()
+        
 def doTests():
     print("Testing on", files)
     nFiles = len(files)
@@ -135,7 +184,7 @@ def doTests():
             im = np.array(im_pil)  # from Image to array
 
             if bRotate:
-                im = ndi.rotate(im, 15, mode='nearest')
+                im = ndi.rotate(im, rotation, mode='nearest')
 
             if bAddNoise:
                 im = im + np.random.normal(loc=0, scale=5, size=im.shape)
@@ -161,4 +210,5 @@ def doTests():
 
 
 if __name__ == "__main__":
-    doTests()
+    #doTests()
+    doHoughWithRotations()
