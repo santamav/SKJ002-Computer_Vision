@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageDraw
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import filters
@@ -163,6 +163,42 @@ def doHoughWithRotations():
         rotation = r
         doTests()
         
+# -----------------------
+# Exercise 4
+# -----------------------
+def HOG(im, nbins):
+    # Compute the gradients
+    gx = filters.sobel(im, 1)
+    gy = filters.sobel(im, 0)
+    # Compute the magnitude and the angle
+    magnitude = np.sqrt(gx**2 + gy**2)
+    angle = np.arctan2(gy, gx) * 180 / np.pi
+    angle[angle < 0] += 180
+    # Create the histogram
+    hog_descriptor = np.zeros(nbins)
+    for i in range(im.shape[0]):
+        for j in range(im.shape[1]):
+            bin = int(angle[i, j] / 20)
+            hog_descriptor[bin] += magnitude[i, j]
+    return hog_descriptor
+    
+
+
+def doTestHOG():
+    nbins = 9
+    for file in files:
+        # Load the image
+        im = np.array(Image.open(file).convert('L'))
+        # Compute the HOG
+        hog_descriptor = HOG(im, nbins)
+        plt.bar(range(nbins), hog_descriptor, width=0.5, edgecolor='black')
+        plt.xticks(range(nbins), labels=range(0, 180, 20))
+        plt.xlabel('Orientation bins')
+        plt.ylabel('Magnitude')
+        plt.title('Histogram of Oriented Gradients')
+        plt.show()
+
+
 def doTests():
     print("Testing on", files)
     nFiles = len(files)
@@ -211,4 +247,5 @@ def doTests():
 
 if __name__ == "__main__":
     #doTests()
-    doHoughWithRotations()
+    #doHoughWithRotations()
+    doTestHOG()
