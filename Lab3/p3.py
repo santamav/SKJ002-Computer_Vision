@@ -11,6 +11,7 @@ import math as math
 import glob
 import os
 import sys
+import time
 
 sys.path.append("Lab1/") # set the path for visualPercepUtils.py
 import visualPercepUtils as vpu
@@ -158,14 +159,18 @@ def testConvTheoGaussian(im, params=None):
                 # image filtered with a convolution in spatial domain
                 imFiltSpace = gaussianFilterSpace(im, n, sigma)
 
-                # image filtered in frequency domain
-                # TODO: Start time
+                # image filtered in frequency 
                 ft_im = gaussianFilterFrequency(im, n, sigma)
                 imFiltFreq = np.absolute(IFT(ft_im))
-                # TODO: end time
-                # TODO: Store time
-                
-                ft_m = np.absolute(filterFt)
+                ## Then, paste the small mask at the center using the sizes computed before as an aid
+                filterBig = np.zeros_like(im, dtype=float)
+                ## First, get sizes
+                w, h = filterFt.shape
+                w2, h2 = w / 2, h / 2  # half width and height of the "small" mask
+                W, H = filterBig.shape
+                W2, H2 = W / 2, H / 2  # half width and height of the "big" mask
+                filterBig[int(W2 - w2):int(W2 + w2), int(H2 - h2):int(H2 + h2)] = filterFt
+                ft_m = np.absolute(IFT(filterBig))
                 ft_im = np.log(np.absolute(ft_im))
                 
                 #imgs.append(imFiltFreq)
@@ -174,7 +179,35 @@ def testConvTheoGaussian(im, params=None):
     
     return imgs 
             
+#------------------------------------
+# Exercise 4
+#------------------------------------
+
+def my_mask(n):
+    mask = np.triu(np.ones((n,n)), 0) - np.tril(np.ones((n,n)), 0)
+    print(mask)
+    return mask
+
+def my_filter(im, mask):
+    filterBig = np.zeros_like(im, dtype=float)  # as large as the image (dtype is important here!)
+    # Now, place filter (the "small" filter mask) at the center of the "big" filter
     
+    ## First, get sizes
+    w, h = mask.shape
+    w2, h2 = w / 2, h / 2  # half width and height of the "small" mask
+    W, H = filterBig.shape
+    
+    ## Then, paste the small mask at the center using the sizes computed before as an aid
+    filterBig[int(W/2 - w/2):int(W/2 + w/2), int(H/2 - h/2):int(H/2 + h/2)] = mask
+    
+    # FFT of the big filter
+    filterBig = fft.ifftshift(filterBig)  # shift origin at upper-left corner
+    
+    # Finally, IFT of the element-wise product of the FT's
+    im_filt = np.absolute(IFT(FT(im) * FT(filterBig)) ) # both '*' and multiply() perform elementwise product
+    
+    return im_filt
+
 # -----------------------------------
 # High-, low- and band-pass filters
 # -----------------------------------
@@ -221,7 +254,7 @@ path_input = './Lab3/imgs-P3/'
 path_output = './Lab3/imgs-out-P3/'
 bAllFiles = False
 if bAllFiles:
-    files = glob.glob(path_input + "*.pgm")
+    files = glob.glob(path_input + "*.jpg")
 else:
     files = [path_input + 'einstein.jpg']  # lena255, habas, mimbre
 
@@ -274,11 +307,11 @@ def doTests():
                 pltTitles = None
             elif test is "testConvTheoGaussian":
                 params = {}
-                params['sigma'] = [1.2, 3.2, 16]
-                params['n'] = [7]
+                params['sigma'] = [16]
+                params['n'] = [3, 7, 15]
                 subTitle = ": I, IFT(FT(I).FT(M)"
                 #pltTitles = ['im', 'IFT(FT(I)*FT(M))', '|FT(M)|', '|FT(I)*FT(M)|']
-                pltTitles = ['sd=1.2', 'sd=3', 'sd=16']
+                pltTitles = ['im','n=3', 'n=7', 'n=15']
                 m = None
                 n = 4
             else:
@@ -306,10 +339,70 @@ def doTests():
             print("# images", len(outs_np))
             print(len(outs_np))
 
-            vpu.showInGrid(outs_np, n=n, m=m, title=nameTests[test] + subTitle, subtitles=pltTitles)
-            #vpu.showInGrid([im] + outs_np, n=n, m=m, title=nameTests[test] + subTitle, subtitles=pltTitles)
+            #vpu.showInGrid(outs_np, n=n, m=m, title=nameTests[test] + subTitle, subtitles=pltTitles)
+            vpu.showInGrid([im] + outs_np, n=n, m=m, title=nameTests[test] + subTitle, subtitles=pltTitles)
         
+def doFiltervsSpatial():
+    sizes = [3, 7, 15, 31, 63]
+    sigma = 1.2
     
+    for file in files:
+        im_pil = Image.open(file).convert('L')
+        im = np.array(im_pil)
+        
+        filterSpaceTimes = []
+        filterFreqTimes = []
+        x_names = []
+        fig, axs = plt.subplots()
+        
+        for size in sizes:
+            x_names.append(f'{size}')
+            t0 = time.time()
+            imFiltSpace = gaussianFilterSpace(im, size, sigma)
+            t1 = time.time()
+            imFiltFreq = gaussianFilterFrequency(im, size, sigma)
+            t2 = time.time()
+            print(f'Filter size: {size}x{size} - Time space: {t1-t0} - Time freq: {t2-t1}')
+            filterSpaceTimes.append(t1-t0)
+            filterFreqTimes.append(t2-t1)
+            #vpu.showInGrid([im, imFiltSpace, imFiltFreq], n=1, m=3, title=f'Filter size: {size}x{size}', subtitles=['Original', 'Spatial', 'Frequency'])
+        # Plot times
+        axs.plot(x_names, filterSpaceTimes, label='Spatial')
+        axs.plot(x_names, filterFreqTimes, label='Frequency')
+        # Set title
+        axs.set_title(f'Filter vs Spatial: {im.shape[0]}x{im.shape[1]}')
+        axs.legend()
+        plt.show()
     
+def doTestMyFilter():
+    for file in files:
+        im_pil = Image.open(file).convert('L')
+        im = np.array(im_pil)
+        mask = my_mask(3)
+        im_filt = my_filter(im, mask)
+        vpu.showInGrid([im, im_filt], n=2, m=1, title='My filter', subtitles=['Original', 'Filtered'])
+        
+def doExercise5():
+    lmbdas = [0.1, 0.3, 0.5, 0.7, 0.9]
+    imgs = []
+    # Load images
+    im1 = np.array(Image.open(path_input + 'stp1.gif').convert('L'))
+    im2 = np.array(Image.open(path_input + 'stp2.gif').convert('L'))    
+    # Transform of the images
+    ft_im1 = FT(im1)
+    ft_im2 = FT(im2)
+    
+    for lmbda in lmbdas:
+        # Combination of the images
+        ft_prod = (lmbda * ft_im1) + ((1 - lmbda) * ft_im2)
+        # Inverse transform of the combination
+        im_comb = np.absolute(IFT(ft_prod))
+        imgs.append(im_comb)
+    
+    vpu.showInGrid(imgs, title='Exercise 5', m=1, n=len(lmbdas), subtitles=[f'Lambda: {lmbda}' for lmbda in lmbdas])
+
 if __name__ == "__main__":
-    doTests()
+    #doTests()
+    #doFiltervsSpatial()
+    #doTestMyFilter()
+    doExercise5()
