@@ -12,7 +12,7 @@ from skimage import measure
 
 from skimage.morphology import disk, square, closing, opening # for the mathematically morphology part
 
-sys.path.append("/home/vicentamen/Documents/Intelligent Systems/Sistemes-Inteligents_Computer-Vision/Lab1/")
+sys.path.append("Lab1/")
 import visualPercepUtils as vpu
 
 bStudentVersion=True
@@ -48,12 +48,17 @@ def labelConnectedComponents(im, params=None):
     binImProc = fillGapsThenRemoveSmallRegions(im, params)[1]
     return [binIm, binImProc,
             measure.label(binIm, background=0), measure.label(binImProc, background=0)]
+
     
 # Dictionary of coin areas (in pixels)
 mm_to_inches = 0.0393701
 coins_dict = {
     '1€': np.pi * ((23 * mm_to_inches)/2 * 50)**2,
     '10 cents': np.pi * ((19.5 * mm_to_inches)/2 * 50)**2,
+}
+cumulative_dict = {
+    '1€': 0,
+    '10 cents': 0
 }
 
 # Classify coins based on their area
@@ -69,8 +74,21 @@ def classify_coins(area):
             min_diff = diff
             result = coin
     return result
-        
+
+def computeCoinsAmount():
+    euros = 0
+    cents = 0
     
+    for coin in cumulative_dict:
+        if coin == '1€':
+            euros += cumulative_dict[coin]
+        elif coin == '10 cents':
+            cents += cumulative_dict[coin] * 10
+    
+    ## Add the extra cents to euros
+    euros += cents // 100
+    cents = cents % 100
+    return euros, cents
 
 def reportPropertiesRegions_ex3(labelIm,title):
     print("* * "+title)
@@ -103,10 +121,34 @@ def reportPropertiesRegions(labelIm,title):
         label = " (probably not a coin)"
         circularity_threshold = 0.7
         if circularity > circularity_threshold:
-           label = " (probably a coin)" 
+            label = classify_coins(region.area)
+            # Update cumulative_dict
+            cumulative_dict[label] += 1
         print("\t circularity: ", round(circularity, 2), label)
-        
-        
+    
+    euros, cents = computeCoinsAmount()
+    print('Total amount: ', euros, '€ and', cents, 'cents')
+    
+    
+def getCoinColorByLabel(label):
+    if label == '1€':
+        return 128
+    elif label == '10 cents':
+        return 96
+    
+def labelCoinsInImage(labelIm):
+    circularity_threshold = 0.7
+    # Get the regions
+    regions = measure.regionprops(labelIm)
+    for region in regions:
+        #Identify coin candidates
+        if region.perimeter == 0: continue
+        circularity = 4 * np.pi * region.area / (region.perimeter ** 2)
+        if circularity > circularity_threshold:
+            label = classify_coins(region.area)
+            # Change the region of the image to the color of the coin
+            labelIm[labelIm == region.label] = getCoinColorByLabel(label)
+    return labelIm
 
 # -----------------
 # Test image files
@@ -175,13 +217,19 @@ def doTests():
                 plt.figure()
                 labelImOriginalBinaryImage = outs_np_plot[2]
                 labelImProcessedBinaryImage = outs_np_plot[3]
-                vpu.showImWithColorMap(labelImOriginalBinaryImage,'jet') # the default color map, 'spectral', does not work in lab computers
-                #vpu.showImWithColorMap(labelImProcessedBinaryImage,'jet') # the default color map, 'spectral', does not work in lab computers
+
+                vpu.showImWithColorMap(labelImProcessedBinaryImage,cmap='jet') # the default color map, 'spectral', does not work in lab computers
                 plt.show(block=True)
                 titleForBinaryImg = "From unprocessed binary image"
                 titleForProcesImg = "From filtered binary image"
+            
                 reportPropertiesRegions(labelIm=labelImOriginalBinaryImage,title=titleForBinaryImg)
                 reportPropertiesRegions(labelIm=labelImProcessedBinaryImage,title=titleForProcesImg)
+                
+                euros, cents = computeCoinsAmount()
+                pltTie = "Total amount: " + str(euros) + "€ and " + str(cents) + " cents"
+                labeledIm = labelCoinsInImage(labelImProcessedBinaryImage)
+                vpu.showImWithColorMap(labeledIm, pltTie,'jet', 72) # the default color map, 'spectral', does not work in lab computers
 
                 if not bStudentVersion:
                     p5e.displayImageWithCoins(im,labelIm=labelImOriginalBinaryImage,title=titleForBinaryImg)

@@ -102,5 +102,6 @@ def displayHoughPeaks(h,peaks,angles,dists,theta,rho):
         plt.plot(slope*(angle-theta[0])+1, dist-rho[0], 'rs', markersize=0.1*peak) # size proportional to peak value
     plt.show(block=True)
 
-def showImWithColorMap(im,cmap='spectral'):
+def showImWithColorMap(im, title = "", cmap='spectral', fontsize=8):
     plt.imshow(im,cmap=cmap)
+    plt.title(title, fontsize=fontsize)
