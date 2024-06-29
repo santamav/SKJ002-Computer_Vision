@@ -194,7 +194,7 @@ if __name__ == "__main__":
         seq = 'camera'
         scale = 1 # 1=no change, >1: zoom in, <1: <zoom out (e.g.
         rotation = 0.0 # in degrees, positive or negative for clockwise or counter-clockwise, respectively
-        translation = (1.0, 1.0) # (tx, ty) in pixel, positive or negative
+        translation = (10.0, 10.0) # (tx, ty) in pixel, positive or negative
         I1, I2 = get_synthetic_sequence_image_pair(seq, translation=translation, rotation=rotation, scale=scale)
 
 
