@@ -182,7 +182,7 @@ def display_magnitude_and_orientation(magnitude, angle, subtitle=""):
 
 if __name__ == "__main__":
 
-    bSyntheticTransf = True
+    bSyntheticTransf = False
     bCrop = False
 
     if not bSyntheticTransf:
@@ -213,7 +213,7 @@ if __name__ == "__main__":
 
     # You are asked to experiment with different values for these hyperparameters
     window_size = 20
-    tau = 0.01
+    tau = 0.001
 
     # Running the LK method
     u, v = np.zeros_like(I1), np.zeros_like(I1) # comment out this line with the proper call (below) when you are ready
@@ -221,13 +221,14 @@ if __name__ == "__main__":
     u,v = optical_flow(I1, I2, window_size=window_size, tau=tau)
     end_time = time.time()
     print(f"Elapsed time: {end_time - start_time}")
-    display_optic_flow(I1, I2, -u, -v, f"Lucas-Kanade method (vanilla version): translation={translation}")
+    display_optic_flow(I1, I2, -u, -v, title="Optical flow")
 
     # Compute the magnitude and orientation of OF
     magnitude = np.sqrt(u ** 2 + v ** 2)
     angle = np.arctan2(v,u)
 
-    subtitle = f"window_size={window_size}, translation={translation}, rotation={rotation}, scale={scale}"
+    #subtitle = f"window_size={window_size}, translation={translation}, rotation={rotation}, scale={scale}"
+    subtitle = f"window_size={window_size}, tau={tau}"
     display_magnitude_and_orientation(magnitude, angle, subtitle=subtitle)
 
 
