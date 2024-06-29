@@ -12,6 +12,8 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from PIL import Image
 from skimage.transform import rescale
 
+import time
+
 def display_image_pyr(imgs):
     N = len(imgs)
     m = int(np.sqrt(N))
@@ -192,9 +194,9 @@ if __name__ == "__main__":
         seq = 'moon'
         seq = 'astronaut'
         seq = 'camera'
-        scale = 1 # 1=no change, >1: zoom in, <1: <zoom out (e.g.
+        scale = 1.02 # 1=no change, >1: zoom in, <1: <zoom out (e.g.
         rotation = 0.0 # in degrees, positive or negative for clockwise or counter-clockwise, respectively
-        translation = (10.0, 10.0) # (tx, ty) in pixel, positive or negative
+        translation = (0.0, 0.0) # (tx, ty) in pixel, positive or negative
         I1, I2 = get_synthetic_sequence_image_pair(seq, translation=translation, rotation=rotation, scale=scale)
 
 
@@ -210,12 +212,15 @@ if __name__ == "__main__":
     plt.show(block=True)
 
     # You are asked to experiment with different values for these hyperparameters
-    window_size = 5
+    window_size = 20
     tau = 0.01
 
     # Running the LK method
     u, v = np.zeros_like(I1), np.zeros_like(I1) # comment out this line with the proper call (below) when you are ready
+    start_time = time.time()
     u,v = optical_flow(I1, I2, window_size=window_size, tau=tau)
+    end_time = time.time()
+    print(f"Elapsed time: {end_time - start_time}")
     display_optic_flow(I1, I2, -u, -v, f"Lucas-Kanade method (vanilla version): translation={translation}")
 
     # Compute the magnitude and orientation of OF
