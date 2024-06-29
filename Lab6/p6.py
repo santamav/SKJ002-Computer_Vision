@@ -64,12 +64,12 @@ def optical_flow(I1g, I2g, window_size, tau=1e-2, bDisplay=False):
             # A is a vertically stacked matrix of Ix and Iy and b is a one column matrix of -It
             A = np.column_stack((Ix, Iy))
             b = -It
-            AtA = np.matmul(A, A.T)
-            Atb = np.matmul(A, b)
+            AtA = np.matmul(A.T, A)
+            Atb = np.matmul(A.T, b)
 
             # Verify that the smallest eigenvalue of AtA is greater than tau or
             # AtA has rank 2
-            if np.linalg.eigvals(AtA).min() > tau or np.linalg.matrix_rank(AtA) == 2:
+            if np.min(np.linalg.eigvals(AtA)) > tau or np.linalg.matrix_rank(AtA) == 2:
                 nu, residuals, rank, s = np.linalg.lstsq(AtA, Atb, rcond=None)
                 u[i,j]=nu[0]
                 v[i,j]=nu[1]
@@ -163,11 +163,13 @@ def get_synthetic_sequence_image_pair(seq, translation=(0,0), rotation=0, scale=
     return I1, I2
 
 
-def display_magnitude_and_orientation(magnitude, angle):
+def display_magnitude_and_orientation(magnitude, angle, subtitle=""):
     # display the magnitude of OF
     fig, ax = plt.subplots()
     plt.hist(magnitude[magnitude>0].flatten(), 30, label="LK, seq="+seq, fc=(0, 0, 1, 0.2))
     plt.legend()
+    plt.title(subtitle)
+    plt.suptitle("Magnitude", ha='center')
     plt.show(block=True)
 
     # display the orientation of OF
@@ -178,7 +180,7 @@ def display_magnitude_and_orientation(magnitude, angle):
 
 if __name__ == "__main__":
 
-    bSyntheticTransf = False
+    bSyntheticTransf = True
     bCrop = False
 
     if not bSyntheticTransf:
@@ -191,8 +193,8 @@ if __name__ == "__main__":
         seq = 'astronaut'
         seq = 'camera'
         scale = 1 # 1=no change, >1: zoom in, <1: <zoom out (e.g.
-        rotation = -30.0 # in degrees, positive or negative for clockwise or counter-clockwise, respectively
-        translation = (0.0, 0.0) # (tx, ty) in pixel, positive or negative
+        rotation = 0.0 # in degrees, positive or negative for clockwise or counter-clockwise, respectively
+        translation = (1.0, 1.0) # (tx, ty) in pixel, positive or negative
         I1, I2 = get_synthetic_sequence_image_pair(seq, translation=translation, rotation=rotation, scale=scale)
 
 
@@ -208,18 +210,19 @@ if __name__ == "__main__":
     plt.show(block=True)
 
     # You are asked to experiment with different values for these hyperparameters
-    window_size = 3
+    window_size = 5
     tau = 0.01
 
     # Running the LK method
     u, v = np.zeros_like(I1), np.zeros_like(I1) # comment out this line with the proper call (below) when you are ready
     u,v = optical_flow(I1, I2, window_size=window_size, tau=tau)
-    display_optic_flow(I1, I2, -u, -v, "Lucas-Kanade method (vanilla version)")
+    display_optic_flow(I1, I2, -u, -v, f"Lucas-Kanade method (vanilla version): translation={translation}")
 
     # Compute the magnitude and orientation of OF
-    magnitude = np.zeros_like(u) # replace with your code
+    magnitude = np.sqrt(u ** 2 + v ** 2)
     angle = np.arctan2(v,u)
 
-    display_magnitude_and_orientation(magnitude, angle)
+    subtitle = f"window_size={window_size}, translation={translation}, rotation={rotation}, scale={scale}"
+    display_magnitude_and_orientation(magnitude, angle, subtitle=subtitle)
 
 
