@@ -33,11 +33,11 @@ def exercici_1(abs_mag, log_mag, phase):
     print(f'Magnitude Log min:{np.min(log_mag)} max:{np.max(log_mag)}')
     
     fig, axs = plt.subplots(1, 3)
-    axs[0].boxplot([np.min(abs_mag),np.max(abs_mag)])
+    axs[0].boxplot(abs_mag.flatten())
     axs[0].set_title('Magnitude Abs')
-    axs[1].boxplot([np.min(log_mag),np.max(log_mag)])
+    axs[1].boxplot(log_mag.flatten())
     axs[1].set_title('Magnitude Log')
-    axs[2].hist(phase)
+    axs[2].hist(phase.flatten(), bins=100, range=(-math.pi, math.pi))
     axs[2].set_title('Phase')
 
 def testFT(im, params=None):
@@ -263,7 +263,7 @@ else:
 # --------------------
 bAllTests = True
 if bAllTests:
-    tests = ['testConvTheoGaussian']#['testConvTheoGaussian']
+    tests = ['testFT']#['testConvTheoGaussian']
     #tests = ['testFT', 'testConvTheo', 'testBandPassFilter']
 else:
     tests = ['testFT']
@@ -340,7 +340,7 @@ def doTests():
             print(len(outs_np))
 
             #vpu.showInGrid(outs_np, n=n, m=m, title=nameTests[test] + subTitle, subtitles=pltTitles)
-            vpu.showInGrid([im] + outs_np, n=n, m=m, title=nameTests[test] + subTitle, subtitles=pltTitles)
+            vpu.showInGrid([im] + outs_np, title=nameTests[test] + subTitle, subtitles=pltTitles)
         
 def doFiltervsSpatial():
     sizes = [3, 7, 15, 31, 63]
@@ -434,8 +434,8 @@ def doExercise6():
     
 
 if __name__ == "__main__":
-    #doTests()
+    doTests()
     #doFiltervsSpatial()
     #doTestMyFilter()
     #doExercise5()
-    doExercise6()
+    #doExercise6()

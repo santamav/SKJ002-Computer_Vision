@@ -68,9 +68,9 @@ def addGaussianNoise(im, sd):
     
     #if the mode is RGB, do the calculations for each band
     im_array = np.array(im)
-    im_array[::,0] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array[1])),0,255).astype("uint8")
-    im_array[::,1] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array[1])),0,255).astype("uint8")
-    im_array[::,2] += np.clip(np.random.normal(loc=0, scale=sd, size=(im_array.shape[0], im_array[1])),0,255).astype("uint8")
+    im_array[:,:,0] = im_array[:,:,0] + np.random.normal(loc=0, scale=sd, size=im_array[:,:,0].shape)
+    im_array[:,:,1] = im_array[:,:,1] + np.random.normal(loc=0, scale=sd, size=im_array[:,:,1].shape)
+    im_array[:,:,2] = im_array[:,:,2] + np.random.normal(loc=0, scale=sd, size=im_array[:,:,2].shape)
     return im_array
     
 def testGaussianNoise(im, sigmas):
@@ -151,7 +151,8 @@ def old_gaussianFilter(im, sigma=5):
 def gaussianFilter(im, sigma=5, n=16):
     # im is PIL image
     gv1d = scipy.signal.gaussian(n, sigma)
-    plt.imshow(gv1d.reshape(1, -1))
+    gv1d = gv1d / np.sum(gv1d)
+    #plt.imshow(gv1d.reshape(1, -1))
     gv2d = np.outer(gv1d, gv1d)
     #plt.imshow(gv2d)
     result = im.copy()
@@ -216,9 +217,8 @@ def testMedianFilter(im_clean, params):
 # Quotient Image
 # --------------------------
 def quotientImage(im, sigma):
-    blurred_im = gaussianFilter(im, sigma, 15)
-    result = im.copy()
-    result = result/blurred_im
+    blurred_im = gaussianFilter(im, sigma,)
+    result = im / blurred_im
     plt.imshow(result)
     return result
 
@@ -227,6 +227,18 @@ def testQuotientImage(im, params):
     for filter_size in params['sd_gauss_filter']:
         imgs.append(quotientImage(im, filter_size))
     return imgs
+
+def doQuotient():
+    im = Image.open('./Lab2/imgs-P2/peppers.ppm').convert('L')
+    sigma = 2
+    quotioentImage = quotientImage(im, sigma)
+    
+    fig, axs = plt.subplots(1, 2)
+    axs[0].imshow(im, cmap='gray')
+    axs[0].set_title('Original Image')
+    axs[1].imshow(quotioentImage, cmap='gray')
+    axs[1].set_title('Quotient Image')
+    plt.show()
 
 # -----------------
 # Test image files
@@ -343,4 +355,5 @@ def doTests():
             vpu.showInGrid([im] + outs_np, title=nameTests[test] + subTitle)
 
 if __name__ == "__main__":
-    doTests()
+    #doTests()
+    doQuotient()
